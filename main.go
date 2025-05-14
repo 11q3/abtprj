@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -12,25 +11,43 @@ import (
 const addr = "http://localhost:8080"
 const connStr = "postgres://postgres:1121231@localhost:5432/abtprj?sslmode=disable"
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "hello world!")
+func main() {
 	db, err := sql.Open("postgres", connStr)
-
 	if err != nil {
 		log.Println("error while connecting to db")
 		return
 	}
-	res, err := db.Exec("INSERT INTO temp DEFAULT VALUES")
-	log.Println(res)
-	log.Println(err)
 
-}
-
-func main() {
-	fmt.Println("Hello, World!")
+	handler := makeHandler()
 
 	http.HandleFunc("/", handler)
+
 	log.Printf("Starting server at %s", addr)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+
+	fs := http.FileServer(http.Dir("./static"))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
+
+	log.Fatal(
+		http.ListenAndServe(":8080", nil))
+	log.Printf("db is %v", db)
 
 }
+
+func makeHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println(r.URL.Path)
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		http.ServeFile(w, r, "./static/index.html")
+	}
+}
+
+/*
+func makeHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		db.Exec("INSERT INTO temp DEFAULT VALUES")
+	}
+}
+*/

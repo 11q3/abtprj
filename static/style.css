@@ -1,0 +1,30 @@
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body Styling */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f9f9f9;
+    color: #333;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Header */
+h1 {
+    font-size: 2.5rem;
+    color: #ff6f61;
+    margin-bottom: 20px;
+}
+
+/* Cat Image */
+img {
+    max-width: 100%;
+    height: auto;
+    border: 5px solid #ffcccb;
+    border-radius: 10px;
+}
