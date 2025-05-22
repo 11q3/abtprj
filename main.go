@@ -18,9 +18,13 @@ func main() {
 		return
 	}
 
-	handler := makeHandler()
+	mainHandler := makeMainHandler()
+	firstHandler := makeFirstHandler()
+	secondHandler := makeSecondHandler()
 
-	http.HandleFunc("/", handler)
+	http.HandleFunc("/", mainHandler)
+	http.HandleFunc("/first/", firstHandler)
+	http.HandleFunc("/second/", secondHandler)
 
 	log.Printf("Starting server at %s", addr)
 
@@ -33,7 +37,7 @@ func main() {
 
 }
 
-func makeHandler() http.HandlerFunc {
+func makeMainHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println(r.URL.Path)
 		if r.URL.Path != "/" {
@@ -44,8 +48,30 @@ func makeHandler() http.HandlerFunc {
 	}
 }
 
+func makeFirstHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println(r.URL.Path)
+		if r.URL.Path != "/first/" {
+			http.NotFound(w, r)
+			return
+		}
+		http.ServeFile(w, r, "./static/first.html")
+	}
+}
+
+func makeSecondHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println(r.URL.Path)
+		if r.URL.Path != "/second/" {
+			http.NotFound(w, r)
+			return
+		}
+		http.ServeFile(w, r, "./static/second.html")
+	}
+}
+
 /*
-func makeHandler(db *sql.DB) http.HandlerFunc {
+func makeMainHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		db.Exec("INSERT INTO temp DEFAULT VALUES")
 	}
