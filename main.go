@@ -1,9 +1,11 @@
 package main
 
 import (
+	"abtprj/db"
 	"database/sql"
 	"log"
 	"net/http"
+	"text/template"
 
 	_ "github.com/lib/pq"
 )
@@ -19,11 +21,11 @@ func main() {
 	}
 
 	mainHandler := makeMainHandler()
-	firstHandler := makeFirstHandler()
+	workLogHandler := makeWorkLogHandler(db)
 	secondHandler := makeSecondHandler()
 
 	http.HandleFunc("/", mainHandler)
-	http.HandleFunc("/first/", firstHandler)
+	http.HandleFunc("/worklog/", workLogHandler)
 	http.HandleFunc("/second/", secondHandler)
 
 	log.Printf("Starting server at %s", addr)
@@ -48,14 +50,61 @@ func makeMainHandler() http.HandlerFunc {
 	}
 }
 
-func makeFirstHandler() http.HandlerFunc {
+func makeWorkLogHandler(dbConn *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println(r.URL.Path)
-		if r.URL.Path != "/first/" {
-			http.NotFound(w, r)
+		tmpl, err := template.ParseFiles("static/worklog.html")
+		if err != nil {
+			http.Error(w, "Template parsing error", 500)
+			log.Println(err)
 			return
 		}
-		http.ServeFile(w, r, "./static/first.html")
+
+		rows, err := dbConn.Query("SELECT id, date, start_time, end_time, duration, name, status FROM work_sessions ORDER BY date DESC")
+		if err != nil {
+			http.Error(w, "DB error", 500)
+			log.Println(err)
+			return
+		}
+		defer rows.Close()
+
+		var sessions []db.WorkSession
+
+		for rows.Next() {
+			var s db.WorkSession
+			var id int
+
+			err := rows.Scan(&id, &s.Date, &s.StartTime, &s.EndTime, &s.Duration, &s.Name, &s.Status)
+			if err != nil {
+				log.Println("Scan error:", err)
+				continue
+			}
+
+			taskRows, err := dbConn.Query("SELECT name, description, status FROM tasks WHERE session_id = $1", id)
+			if err != nil {
+				log.Println("Task query error:", err)
+				continue
+			}
+
+			for taskRows.Next() {
+				var t db.Task
+				err := taskRows.Scan(&t.Name, &t.Description, &t.Status)
+				if err != nil {
+					log.Println("Task scan error:", err)
+					continue
+				}
+				s.Tasks = append(s.Tasks, t)
+			}
+			taskRows.Close()
+
+			sessions = append(sessions, s)
+		}
+
+		err = tmpl.Execute(w, sessions)
+		if err != nil {
+			http.Error(w, "Render error", 500)
+			log.Println("Template exec error:", err)
+		}
+
 	}
 }
 
