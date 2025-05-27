@@ -1,13 +1,20 @@
 package db
 
+import (
+	"database/sql"
+	"time"
+)
+
 type Task struct {
 	Name        string
 	Description string
 	Status      string
+	CreatedAt   time.Time
+	DoneAt      sql.NullTime
 }
 
 type WorkSession struct {
-	Date      string
+	Date      string // YYYY-MM-D
 	StartTime string
 	EndTime   string
 	Duration  string

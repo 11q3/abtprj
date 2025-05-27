@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"text/template"
+	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -21,8 +22,8 @@ func main() {
 	}
 
 	mainHandler := makeMainHandler()
-	workLogHandler := makeWorkLogHandler(db)
 	secondHandler := makeSecondHandler()
+	workLogHandler := makeWorkLogHandler(db)
 
 	http.HandleFunc("/", mainHandler)
 	http.HandleFunc("/worklog/", workLogHandler)
@@ -59,7 +60,7 @@ func makeWorkLogHandler(dbConn *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		rows, err := dbConn.Query("SELECT id, date, start_time, end_time, duration, name, status FROM work_sessions ORDER BY date DESC")
+		rows, err := dbConn.Query("SELECT id, date, start_time, end_time, duration FROM work_sessions ORDER BY date DESC")
 		if err != nil {
 			http.Error(w, "DB error", 500)
 			log.Println(err)
@@ -72,14 +73,18 @@ func makeWorkLogHandler(dbConn *sql.DB) http.HandlerFunc {
 		for rows.Next() {
 			var s db.WorkSession
 			var id int
+			var rawDate time.Time
 
-			err := rows.Scan(&id, &s.Date, &s.StartTime, &s.EndTime, &s.Duration, &s.Name, &s.Status)
+			err := rows.Scan(&id, &rawDate, &s.StartTime, &s.EndTime, &s.Duration)
 			if err != nil {
 				log.Println("Scan error:", err)
 				continue
 			}
 
-			taskRows, err := dbConn.Query("SELECT name, description, status FROM tasks WHERE session_id = $1", id)
+			s.Date = rawDate.Format("2006-01-02")
+
+			taskRows, err := dbConn.Query("SELECT name, description, status, created_at, done_at FROM tasks WHERE session_id = $1", id)
+
 			if err != nil {
 				log.Println("Task query error:", err)
 				continue
@@ -87,7 +92,7 @@ func makeWorkLogHandler(dbConn *sql.DB) http.HandlerFunc {
 
 			for taskRows.Next() {
 				var t db.Task
-				err := taskRows.Scan(&t.Name, &t.Description, &t.Status)
+				err := taskRows.Scan(&t.Name, &t.Description, &t.Status, &t.CreatedAt, &t.DoneAt)
 				if err != nil {
 					log.Println("Task scan error:", err)
 					continue
@@ -104,7 +109,6 @@ func makeWorkLogHandler(dbConn *sql.DB) http.HandlerFunc {
 			http.Error(w, "Render error", 500)
 			log.Println("Template exec error:", err)
 		}
-
 	}
 }
 
