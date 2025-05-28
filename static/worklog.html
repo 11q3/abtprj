@@ -3,108 +3,71 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>11q2’s WorkLog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>11q2`s Worklog</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 
 <body>
-
-<div class="header">
+<header class="header">
     <h1>11q2</h1>
-    <div class="nav">
-        <a href="/">Dashboard</a>
-        <!-- normalize to trailing slash so it matches your mux.HandleFunc("/worklog/", ...) -->
-        <a href="/worklog/">Tasks</a>
-        <a href="#">Stats</a>
-        <a href="#">Settings</a>
-    </div>
-</div>
+    <nav class="nav" aria-label="Main navigation">
+        <ul>
+            <li><a href="/">Dashboard</a></li>
+            <li><a href="/worklog/">Tasks</a></li>
+            <li><a href="#">Stats</a></li>
+            <li><a href="#">Settings</a></li>
+        </ul>
+    </nav>
+</header>
 
 <div class="main-container">
-    <!-- SIDEBAR -->
-    <div class="sidebar">
-        <!-- Current Work Status window -->
-        <div class="working-window">
-            <div class="window-header">Current Work Status</div>
+    <aside class="sidebar">
+        <section class="working-window">
+            <header class="window-header">Current Work Status</header>
             <div class="window-content">
                 Currently working: <strong><span id="working-indicator">NO</span></strong>
             </div>
-        </div>
-    </div>
+        </section>
+    </aside>
 
-    <!-- RIGHT PANEL / HISTORY -->
-    <div class="history" id="history">
-
-        <!-- Select Date window -->
-        <div class="date-window" id="date-window">
-            <div class="window-header">Select Date</div>
+    <main class="history" id="history">
+        <section class="date-window" id="date-window">
+            <header class="window-header">Select Date</header>
             <div class="window-content">
-                <input type="date" id="date" name="date" required>
+                <input type="date" id="date" name="date" required aria-label="Select date">
             </div>
-        </div>
+        </section>
 
-        <p><strong>Tasks done on this day:</strong></p>
-        {{if .Tasks}}
-        {{range .Tasks}}
-        <div class="day-log" data-date="{{.DoneAt.Time.Format `2006-01-02`}}">
-            <ul>
-                <li>{{.Name}} — {{.Description}}, ({{.Status}}), DONE AT
-                    {{if .DoneAt.Valid}}
-                    <span class="done-at">{{.DoneAt.Time}}</span>
-                    {{else}}
-                    <span class="done-at">-</span>
-                    {{end}}
-                    UTC
-                </li>
-            </ul>
-        </div>
-        {{end}}
-        {{else}}
-        <p>No completed tasks for this date.</p>
-        {{end}}
-
-    </div>
+        <section class="tasks">
+            <h2>Tasks done on this day:</h2>
+            {{ if .Tasks }}
+            {{ range .Tasks }}
+            <article class="day-log" data-date="{{ .DoneAt.Time.Format `2006-01-02` }}">
+            <p>
+                <span class="task-name">{{ .Name }}</span> —
+                <span class="task-desc">{{ .Description }},</span>
+                DONE AT
+                <time
+                        datetime="{{ if .DoneAt.Valid }}{{ .DoneAt.Time.Format `2006-01-02T15:04:05Z07:00` }}{{ end }}"
+                >
+                {{ if .DoneAt.Valid }}
+                {{ .DoneAt.Time.Format "15:04:05" }}
+                {{ else }}
+                -
+                {{ end }}
+                </time>
+            </p>
+            </article>
+            {{ end }}
+            {{ else }}
+            <p>No completed tasks for this date.</p>
+            {{ end }}
+        </section>
+    </main>
 </div>
 
-<!-- SCRIPTS -->
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // --- 1) Format DONE AT timestamps ---
-        document.querySelectorAll('.done-at').forEach(span => {
-            const raw = span.textContent.trim();
-            if (!raw || raw === '-') return;
-            const d = new Date(raw);
-            span.textContent = d.toLocaleString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: 'numeric',
-                minute: 'numeric',
-                second: 'numeric',
-                hour12: false
-            });
-        });
-
-        // --- 2) Date‐picker reload on change ---
-        const picker = document.getElementById("date");
-        // initialize from ?date=… or default to today
-        const params = new URLSearchParams(window.location.search);
-        const today = new Date().toISOString().split("T")[0];
-        picker.value = params.get("date") || today;
-
-        picker.addEventListener("change", function () {
-            // navigate to /worklog/?date=YYYY-MM-DD
-            window.location.href = `/worklog/?date=${this.value}`;
-        });
-
-        // --- 3) Populate Current Work Status ---
-        const ind = document.getElementById('working-indicator');
-        const working = localStorage.getItem('isWorking') === 'true';
-        ind.textContent = working ? 'YES' : 'NO';
-    });
-</script>
-
+<script src="/static/worklog.js"></script>
 </body>
 
 </html>
