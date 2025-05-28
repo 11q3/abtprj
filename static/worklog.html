@@ -9,109 +9,128 @@
 
 <body>
 
-    <div class="header">
-        <h1>11q2</h1>
-        <div class="nav">
-            <a href="/">Dashboard</a>
-            <a href="/worklog">Tasks</a>
-            <a href="#">Stats</a>
-            <a href="#">Settings</a>
+<div class="header">
+    <h1>11q2</h1>
+    <div class="nav">
+        <a href="/">Dashboard</a>
+        <a href="/worklog">Tasks</a>
+        <a href="#">Stats</a>
+        <a href="#">Settings</a>
+    </div>
+</div>
+
+<div class="main-container">
+    <div class="sidebar">
+        <div class="date-picker">
+            <label for="date">Select Date:</label>
+            <input type="date" id="date" name="date">
         </div>
     </div>
 
-    <div class="main-container">
-        <div class="sidebar">
-            <div class="date-picker">
-                <label for="date">Select Date:</label>
-                <input type="date" id="date" name="date">
-            </div>
-        </div>
-
-        <div class="history" id="history">
-            {{range .}}
-            <div class="day-log" data-date="{{.Date}}">
-                <ul>
-                    {{range .Tasks}}
-                    <li>{{.Name}} — {{.Description}}, ({{.Status}}), DONE AT
-                        {{if .DoneAt.Valid}}
-                        <span class="done-at">{{.DoneAt.Time}}</span>
-                        {{else}}
-                        <span class="done-at">-</span>
-                        {{end}}
-                        UTC
-                    </li>
+    <div class="history" id="history">
+        <p><strong>Tasks done today:</strong></p>
+        {{if .Tasks}}
+        {{range .Tasks}}
+        <div class="day-log" data-date="{{.DoneAt.Time.Format `2006-01-02`}}">
+            <ul>
+                <li>{{.Name}} — {{.Description}}, ({{.Status}}), DONE AT
+                    {{if .DoneAt.Valid}}
+                    <span class="done-at">{{.DoneAt.Time}}</span>
+                    {{else}}
+                    <span class="done-at">-</span>
                     {{end}}
-                </ul>
-            </div>
-            {{end}}
+                    UTC
+                </li>
+            </ul>
         </div>
+        {{end}}
+        {{else}}
+        <p>No completed tasks for today.</p>
+        {{end}}
 
     </div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const picker = document.getElementById("date");
-            const logs = document.querySelectorAll(".day-log");
 
-            function formatDateString(date) {
-                return date.toISOString().split("T")[0];
-            }
 
-            function formatHumanReadableDate(dateString) {
-                const date = new Date(dateString);
-                return date.toLocaleString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: 'numeric',
-                    minute: 'numeric',
-                    second: 'numeric',
-                    hour12: false
-                });
-            }
+</div>
 
-            // Format all DONE AT timestamps
-            document.querySelectorAll('.done-at').forEach(span => {
-                const rawDate = span.textContent.trim();
-                if (!rawDate || rawDate === '-') return;
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const picker = document.getElementById("date");
+        const logs = document.querySelectorAll(".day-log");
 
-                const formattedDate = formatHumanReadableDate(rawDate);
-                span.textContent = formattedDate;
+        function formatDateString(date) {
+            return date.toISOString().split("T")[0];
+        }
+
+        function formatHumanReadableDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: 'numeric',
+                second: 'numeric',
+                hour12: false
             });
+        }
 
-            // Handler to filter logs by date
-            function filterLogsByDate(selectedDate) {
-                let found = false;
+        // Format all DONE AT timestamps
+        document.querySelectorAll('.done-at').forEach(span => {
+            const rawDate = span.textContent.trim();
+            if (!rawDate || rawDate === '-') return;
 
-                logs.forEach(log => {
-                    if (log.dataset.date === selectedDate) {
-                        log.style.display = "block";
-                        found = true;
-                    } else {
-                        log.style.display = "none";
-                    }
-                });
-
-                if (!found) {
-                    alert("No logs found for this date");
-                }
-            }
-
-            // Load last selected date
-            const savedDate = localStorage.getItem("selectedDate");
-            const today = new Date();
-            const defaultDate = savedDate || formatDateString(today);
-            picker.value = defaultDate;
-            filterLogsByDate(defaultDate);
-
-            picker.addEventListener("change", function () {
-                const selectedDate = this.value;
-                localStorage.setItem("selectedDate", selectedDate);
-                filterLogsByDate(selectedDate);
-            });
+            span.textContent = formatHumanReadableDate(rawDate);
         });
-    </script>
+
+        // Handler to filter logs by date
+        function filterLogsByDate(selectedDate) {
+            let found = false;
+
+            logs.forEach(log => {
+                if (log.dataset.date === selectedDate) {
+                    log.style.display = "block";
+                    found = true;
+                } else {
+                    log.style.display = "none";
+                }
+            });
+        }
+
+        // Load last selected date
+        const savedDate = localStorage.getItem("selectedDate");
+        const today = new Date();
+        const defaultDate = savedDate || formatDateString(today);
+        picker.value = defaultDate;
+        filterLogsByDate(defaultDate);
+
+        picker.addEventListener("change", function () {
+            const selectedDate = this.value;
+            localStorage.setItem("selectedDate", selectedDate);
+            filterLogsByDate(selectedDate);
+        });
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const picker = document.getElementById("date");
+
+        function formatDateString(date) {
+            return date.toISOString().split("T")[0];
+        }
+
+        const savedDate = localStorage.getItem("selectedDate");
+        const today = new Date();
+        picker.value = savedDate || formatDateString(today);
+
+        picker.addEventListener("change", function () {
+            const selectedDate = this.value;
+            localStorage.setItem("selectedDate", selectedDate);
+            window.location.href = "/worklog/?date=" + selectedDate;
+        });
+    });
+</script>
 
 
 </body>
