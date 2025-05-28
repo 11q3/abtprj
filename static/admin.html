@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>11q2's Admin</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="header">
+        <h1>Admin 11q2</h1>
+    </div>
+
+    <div class="main-container" style="padding: 20px;">
+        <h2>New Task</h2>
+
+        <form action="/admin/add-task" method="POST">
+            <div>
+                <label for="name">Task Name:</label><br>
+                <input type="text" id="name" name="name" required style="width: 300px;">
+            </div>
+            <div style="margin-top: 10px;">
+                <label for="description">Description:</label><br>
+                <textarea id="description" name="description" rows="4" style="width: 300px;"></textarea>
+            </div>
+            <div style="margin-top: 10px;">
+                <button type="submit">Add Task</button>
+            </div>
+        </form>
+
+        <hr style="margin: 40px 0;">
+
+        <h2>Current Tasks</h2>
+
+        <ul>
+            {{range .Tasks}}
+            <li style="margin-bottom: 10px;">
+                <strong>{{.Name}}</strong> — {{.Description}}
+                <form action="/admin/complete-task" method="POST" style="display:inline;">
+                    <input type="hidden" name="name" value="{{.Name}}">
+                    <button type="submit">Mark as Done</button>
+                </form>
+            </li>
+            {{else}}
+            <li>No tasks yet.</li>
+            {{end}}
+        </ul>
+    </div>
+</body>
+</html>
