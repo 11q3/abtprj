@@ -8,13 +8,13 @@ import (
 )
 
 func main() {
-	app, err := app.New()
+	application, err := app.New()
 	if err != nil {
 		log.Fatalf("failed to initialize app: %v", err)
 	}
-	defer app.DB.Close()
+	defer application.DB.Close()
 
 	addr := ":8080"
 	log.Printf("Starting server on %s", addr)
-	log.Fatal(http.ListenAndServe(addr, app.Router))
+	log.Fatal(http.ListenAndServe(addr, application.Router))
 }

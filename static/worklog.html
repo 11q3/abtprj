@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>11q2`s WorkLog</title>
+    <title>11q2’s WorkLog</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 
@@ -20,14 +20,29 @@
 </div>
 
 <div class="main-container">
+    <!-- SIDEBAR -->
     <div class="sidebar">
-        <div class="date-picker">
-            <label for="date">Select Date:</label>
-            <input type="date" id="date" name="date">
+        <!-- Current Work Status window -->
+        <div class="working-window">
+            <div class="window-header">Current Work Status</div>
+            <div class="window-content">
+                Currently working: <strong><span id="working-indicator">NO</span></strong>
+            </div>
         </div>
     </div>
 
+    <!-- RIGHT PANEL / HISTORY -->
     <div class="history" id="history">
+
+        <!-- Select Date window moved here -->
+        <div class="date-window" id="date-window">
+            <div class="window-header">Select Date</div>
+            <div class="window-content">
+                <input type="date" id="date" name="date">
+            </div>
+        </div>
+
+
         <p><strong>Tasks done today:</strong></p>
         {{if .Tasks}}
         {{range .Tasks}}
@@ -49,23 +64,17 @@
         {{end}}
 
     </div>
-
-
-
 </div>
 
+<!-- SCRIPTS -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        const picker = document.getElementById("date");
-        const logs = document.querySelectorAll(".day-log");
-
-        function formatDateString(date) {
-            return date.toISOString().split("T")[0];
-        }
-
-        function formatHumanReadableDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleString('en-US', {
+        // --- 1) Format DONE AT timestamps ---
+        document.querySelectorAll('.done-at').forEach(span => {
+            const raw = span.textContent.trim();
+            if (!raw || raw === '-') return;
+            const d = new Date(raw);
+            span.textContent = d.toLocaleString('en-US', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
@@ -75,60 +84,64 @@
                 second: 'numeric',
                 hour12: false
             });
-        }
-
-        // Format all DONE AT timestamps
-        document.querySelectorAll('.done-at').forEach(span => {
-            const rawDate = span.textContent.trim();
-            if (!rawDate || rawDate === '-') return;
-
-            span.textContent = formatHumanReadableDate(rawDate);
         });
 
-        // Handler to filter logs by date
-        function filterLogsByDate(selectedDate) {
-            let found = false;
+        // --- 2) Date‐picker init & filtering ---
+        const picker = document.getElementById("date");
+        const logs = document.querySelectorAll(".day-log");
+        const dateWindow = document.getElementById("date-window");
 
+        // Helper to format YYYY-MM-DD
+        const fmt = d => d.toISOString().split("T")[0];
+
+        function filterBy(dateStr) {
             logs.forEach(log => {
-                if (log.dataset.date === selectedDate) {
-                    log.style.display = "block";
-                    found = true;
-                } else {
-                    log.style.display = "none";
-                }
+                log.style.display = (log.dataset.date === dateStr) ? "block" : "none";
             });
         }
 
-        // Load last selected date
-        const savedDate = localStorage.getItem("selectedDate");
-        const today = new Date();
-        const defaultDate = savedDate || formatDateString(today);
-        picker.value = defaultDate;
-        filterLogsByDate(defaultDate);
+        // Initialize picker value & filter
+        const saved = localStorage.getItem("selectedDate");
+        picker.value = saved || fmt(new Date());
+        filterBy(picker.value);
 
         picker.addEventListener("change", function () {
-            const selectedDate = this.value;
-            localStorage.setItem("selectedDate", selectedDate);
-            filterLogsByDate(selectedDate);
+            localStorage.setItem("selectedDate", this.value);
+            filterBy(this.value);
         });
-    });
 
-    document.addEventListener("DOMContentLoaded", function () {
-        const picker = document.getElementById("date");
-
-        function formatDateString(date) {
-            return date.toISOString().split("T")[0];
-        }
-
-        const savedDate = localStorage.getItem("selectedDate");
-        const today = new Date();
-        picker.value = savedDate || formatDateString(today);
-
-        picker.addEventListener("change", function () {
-            const selectedDate = this.value;
-            localStorage.setItem("selectedDate", selectedDate);
-            window.location.href = "/worklog/?date=" + selectedDate;
+        dateWindow.addEventListener('click', e => {
+            // if they click directly on the <input>, let it behave normally
+            if (e.target !== picker) {
+                // Chrome et al: use showPicker() if available
+                if (typeof picker.showPicker === 'function') {
+                    picker.showPicker();
+                } else {
+                    // fallback: programmatically click the input to open the UI
+                    picker.click();
+                }
+            }
         });
+
+        // --- 4) Populate Current Work Status ---
+        const ind = document.getElementById('working-indicator');
+        const working = localStorage.getItem('isWorking') === 'true';
+        ind.textContent = working ? 'YES' : 'NO';
+
+        // --- 3) Click anywhere in the date‐window to open calendar ---
+        dateWindow.addEventListener('click', () => {
+            // make sure input is focused (for keyboard nav etc.)
+            picker.focus();
+
+            // Chrome et al: use showPicker() if available
+            if (typeof picker.showPicker === 'function') {
+                picker.showPicker();
+            } else {
+                // fallback: programmatically click the input to open the UI
+                picker.click();
+            }
+        });
+
     });
 </script>
 
