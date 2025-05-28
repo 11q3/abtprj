@@ -13,7 +13,8 @@
     <h1>11q2</h1>
     <div class="nav">
         <a href="/">Dashboard</a>
-        <a href="/worklog">Tasks</a>
+        <!-- normalize to trailing slash so it matches your mux.HandleFunc("/worklog/", ...) -->
+        <a href="/worklog/">Tasks</a>
         <a href="#">Stats</a>
         <a href="#">Settings</a>
     </div>
@@ -34,16 +35,15 @@
     <!-- RIGHT PANEL / HISTORY -->
     <div class="history" id="history">
 
-        <!-- Select Date window moved here -->
+        <!-- Select Date window -->
         <div class="date-window" id="date-window">
             <div class="window-header">Select Date</div>
             <div class="window-content">
-                <input type="date" id="date" name="date">
+                <input type="date" id="date" name="date" required>
             </div>
         </div>
 
-
-        <p><strong>Tasks done today:</strong></p>
+        <p><strong>Tasks done on this day:</strong></p>
         {{if .Tasks}}
         {{range .Tasks}}
         <div class="day-log" data-date="{{.DoneAt.Time.Format `2006-01-02`}}">
@@ -60,7 +60,7 @@
         </div>
         {{end}}
         {{else}}
-        <p>No completed tasks for today.</p>
+        <p>No completed tasks for this date.</p>
         {{end}}
 
     </div>
@@ -86,65 +86,24 @@
             });
         });
 
-        // --- 2) Date‐picker init & filtering ---
+        // --- 2) Date‐picker reload on change ---
         const picker = document.getElementById("date");
-        const logs = document.querySelectorAll(".day-log");
-        const dateWindow = document.getElementById("date-window");
-
-        // Helper to format YYYY-MM-DD
-        const fmt = d => d.toISOString().split("T")[0];
-
-        function filterBy(dateStr) {
-            logs.forEach(log => {
-                log.style.display = (log.dataset.date === dateStr) ? "block" : "none";
-            });
-        }
-
-        // Initialize picker value & filter
-        const saved = localStorage.getItem("selectedDate");
-        picker.value = saved || fmt(new Date());
-        filterBy(picker.value);
+        // initialize from ?date=… or default to today
+        const params = new URLSearchParams(window.location.search);
+        const today = new Date().toISOString().split("T")[0];
+        picker.value = params.get("date") || today;
 
         picker.addEventListener("change", function () {
-            localStorage.setItem("selectedDate", this.value);
-            filterBy(this.value);
+            // navigate to /worklog/?date=YYYY-MM-DD
+            window.location.href = `/worklog/?date=${this.value}`;
         });
 
-        dateWindow.addEventListener('click', e => {
-            // if they click directly on the <input>, let it behave normally
-            if (e.target !== picker) {
-                // Chrome et al: use showPicker() if available
-                if (typeof picker.showPicker === 'function') {
-                    picker.showPicker();
-                } else {
-                    // fallback: programmatically click the input to open the UI
-                    picker.click();
-                }
-            }
-        });
-
-        // --- 4) Populate Current Work Status ---
+        // --- 3) Populate Current Work Status ---
         const ind = document.getElementById('working-indicator');
         const working = localStorage.getItem('isWorking') === 'true';
         ind.textContent = working ? 'YES' : 'NO';
-
-        // --- 3) Click anywhere in the date‐window to open calendar ---
-        dateWindow.addEventListener('click', () => {
-            // make sure input is focused (for keyboard nav etc.)
-            picker.focus();
-
-            // Chrome et al: use showPicker() if available
-            if (typeof picker.showPicker === 'function') {
-                picker.showPicker();
-            } else {
-                // fallback: programmatically click the input to open the UI
-                picker.click();
-            }
-        });
-
     });
 </script>
-
 
 </body>
 
