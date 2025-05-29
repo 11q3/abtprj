@@ -21,7 +21,8 @@ func (h *Handler) AdminHandler(w http.ResponseWriter, r *http.Request) {
 		h.getWorkingStatusForToday(w, r)
 	case r.Method == http.MethodPost && r.URL.Path == "/admin/start-work-session":
 		h.startWorkSession(w, r)
-	//case r.Method == http.MethodPost && r.URL.Path == "/admin/end-work-session": h.endWorkSession(w, r)
+	case r.Method == http.MethodPost && r.URL.Path == "/admin/end-work-session":
+		h.endWorkSession(w, r)
 	default:
 		http.NotFound(w, r)
 	}
@@ -97,6 +98,15 @@ func (h *Handler) startWorkSession(w http.ResponseWriter, r *http.Request) {
 	err := db.StartWorkSession(h.DB)
 	if err != nil {
 		log.Printf("startWorkSession exec error: %v", err)
+		http.Error(w, "db error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *Handler) endWorkSession(w http.ResponseWriter, r *http.Request) {
+	err := db.EndWorkSession(h.DB)
+	if err != nil {
+		log.Printf("endWorkSession exec error: %v", err)
 		http.Error(w, "db error", http.StatusInternalServerError)
 		return
 	}

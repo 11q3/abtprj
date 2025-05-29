@@ -8,6 +8,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         const res = await fetch("/admin/get-work-status");
         const data = await res.json();
 
+        working = data.working;
+
         if (working) {
             indicator.textContent = "YES";
             button.textContent = "Stop Working";
@@ -15,6 +17,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             indicator.textContent = "NO";
             button.textContent = "Start Working";
         }
+
     } catch (e) {
         console.error("Failed to fetch status", e);
     }
@@ -25,7 +28,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     button.addEventListener("click", async () => {
-        const url = working ? "/admin/stop-work-session" : "/admin/start-work-session";
+        const url = working ? "/admin/end-work-session" : "/admin/start-work-session";
         try {
             const res = await fetch(url, { method: "POST" });
             if (res.ok) {

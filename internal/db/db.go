@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 	"time"
 )
@@ -82,8 +83,8 @@ func GetWorkingStatusForDay(db *sql.DB, date string) ([]WorkSession, error) {
 }
 
 func StartWorkSession(db *sql.DB) error {
-	_, err := checkIfActiveSessions(db)
-	if err != nil {
+	isActive, _, err := checkIfActiveSessions(db)
+	if isActive {
 		log.Printf("Attepmpting to create another worksession, while active sessions exist %v", err)
 		return err
 	}
@@ -96,13 +97,33 @@ func StartWorkSession(db *sql.DB) error {
 	return err
 }
 
-func checkIfActiveSessions(db *sql.DB) (bool, error) {
-	row := db.QueryRow("SELECT COUNT(*) FROM work_sessions WHERE end_time IS NULL")
-	var count int
-	if err := row.Scan(&count); err != nil {
-		log.Printf("Error checking active sessions: %v", err)
-		return false, err
+func EndWorkSession(db *sql.DB) error {
+	isActive, s, err := checkIfActiveSessions(db)
+	if !isActive {
+		log.Printf("Attepmpting to end worksession, while active sessions does not exist %v", err)
+		return err
 	}
 
-	return count > 0, nil
+	_, err = db.Exec("UPDATE work_sessions set end_time = $1 WHERE ID=$2", time.Now(), s.Id)
+	if err != nil {
+		log.Printf("Error inserting work session: %v", err)
+		return err
+	}
+	return nil
+}
+
+func checkIfActiveSessions(db *sql.DB) (bool, *WorkSession, error) {
+	row := db.QueryRow("SELECT * FROM work_sessions WHERE end_time IS NULL")
+
+	var ws WorkSession
+	err := row.Scan(&ws.Id, &ws.StartTime, &ws.Duration, &ws.EndTime, &ws.CreatedAt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, nil, nil
+		}
+		log.Printf("Error scanning work session: %v", err)
+		return false, &ws, err
+	}
+
+	return true, &ws, nil
 }
