@@ -72,7 +72,7 @@ func CompleteTask(db *sql.DB, name string) error {
 	return err
 }
 
-func GetWorkingStatusForDay(db *sql.DB, date string) ([]WorkSession, error) {
+func GetWorkingSessionsForDay(db *sql.DB, date string) ([]WorkSession, error) {
 	rows, err := db.Query("SELECT start_time, end_time FROM work_sessions WHERE start_time::date = $1", date)
 	if err != nil {
 		return nil, err
@@ -121,10 +121,10 @@ func EndWorkSession(db *sql.DB) error {
 }
 
 func checkIfActiveSessions(db *sql.DB) (bool, *WorkSession, error) {
-	row := db.QueryRow("SELECT * FROM work_sessions WHERE end_time IS NULL")
+	row := db.QueryRow("SELECT id, start_time, end_time, created_at FROM work_sessions WHERE end_time IS NULL")
 
 	var ws WorkSession
-	err := row.Scan(&ws.Id, &ws.StartTime, &ws.Duration, &ws.EndTime, &ws.CreatedAt)
+	err := row.Scan(&ws.Id, &ws.StartTime, &ws.EndTime, &ws.CreatedAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return false, nil, nil

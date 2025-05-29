@@ -26,12 +26,12 @@
         <section class="working-window">
             <header class="window-header">Current Work Status</header>
             <div class="window-content">
-                Currently working: <strong><span id="working-indicator">NO</span></strong>
+                Currently working: <strong><span id="working-indicator">{{.IsWorking}}</span></strong>
             </div>
         </section>
         <div class="session-summary">
-            Current work session: <span id="session-current">0</span>,
-            Total: <span id="session-total">00:00:00</span>
+            Current work session: <span id="session-current">{{.CurrentSession}}</span>,
+            Total: <span id="session-total">{{.TotalSessionDur}}</span>
         </div>
     </aside>
 
@@ -45,8 +45,8 @@
 
         <section class="tasks">
             <h2>Tasks done on this day:</h2>
-            {{ if .Tasks }}
-            {{ range .Tasks }}
+            {{ if .Dones }}
+            {{ range .Dones }}
             <article class="day-log" data-date="{{ .DoneAt.Time.Format `2006-01-02` }}">
             <p>
                 <span class="task-name">{{ .Name }}</span> —

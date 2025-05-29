@@ -19,7 +19,7 @@ type WorkSession struct {
 	Date      string // YYYY-MM-D
 	StartTime time.Time
 	EndTime   sql.NullTime
-	Duration  sql.NullString
+	Duration  time.Duration
 	Name      string
 	Status    string
 	Tasks     []Task

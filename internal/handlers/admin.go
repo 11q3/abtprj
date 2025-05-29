@@ -93,7 +93,7 @@ func (h *Handler) getWorkingStatusForToday(w http.ResponseWriter, r *http.Reques
 	isWorking := false
 
 	today := time.Now().Format("2006-01-02")
-	sessions, err := db.GetWorkingStatusForDay(h.DB, today)
+	sessions, err := db.GetWorkingSessionsForDay(h.DB, today)
 	if err != nil {
 		log.Println("get working status error,", err)
 		http.Error(w, "db error", http.StatusInternalServerError)
