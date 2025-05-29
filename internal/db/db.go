@@ -61,3 +61,10 @@ func CompleteTask(db *sql.DB, name string) error {
 	)
 	return err
 }
+
+/*func GetWorkingStatus(db *sql.DB, date string) error {
+	_, err := db.Exec(
+		"SELECT start_time"
+	)
+
+}*/
