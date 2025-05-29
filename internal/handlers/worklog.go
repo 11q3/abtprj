@@ -22,7 +22,6 @@ func (h *Handler) WorkLogHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.NotFound(w, r)
 	}
-
 }
 
 func (h *Handler) renderWorklogPage(w http.ResponseWriter, r *http.Request) {
@@ -49,40 +48,40 @@ func (h *Handler) renderWorklogPage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "get working status error", http.StatusInternalServerError)
 		return
 	}
+
+	loc, err := time.LoadLocation("Europe/Moscow")
+	if err != nil {
+		loc = time.Local
+	}
+
 	var last db.WorkSession
-	if workSessions != nil {
+	if len(workSessions) > 0 {
 		last = workSessions[len(workSessions)-1]
 	}
 
-	currentSession := last.StartTime.String() + " - " + time.Now().String()
+	var currentSession string
 	var totalDur time.Duration
-	for _, d := range workSessions {
-		if d.EndTime.Valid {
-			totalDur += d.EndTime.Time.Sub(d.StartTime)
+	for _, sess := range workSessions {
+		if sess.EndTime.Valid {
+			totalDur += sess.EndTime.Time.Sub(sess.StartTime)
 		}
 	}
 
-	loc, err := time.LoadLocation("Europe/Moscow")
-
-	if !last.EndTime.Valid {
-		a := time.Now().In(loc)
-		b := last.StartTime
-		c := a.Sub(b)
-		totalDur += c
+	if len(workSessions) > 0 && !last.EndTime.Valid {
+		now := time.Now().In(loc)
+		startFmt := last.StartTime.In(loc).Format("15:04:05")
+		endFmt := now.Format("15:04:05")
+		currentSession = startFmt + " - " + endFmt
+		totalDur += now.Sub(last.StartTime.In(loc))
 	}
 
-	log.Printf("StartTime raw: %v | Location: %v", last.StartTime, last.StartTime.Location())
-	log.Printf("Now: %v | Location: %v", time.Now(), time.Now().Location())
-	log.Printf("StartTime.Before(Now): %v", last.StartTime.Before(time.Now()))
-	log.Printf("time.Since(StartTime): %v", time.Since(last.StartTime))
-
-	//totalSessionDur := time.Since(start).String()
+	totalDur = totalDur.Truncate(time.Second)
 
 	data := WorklogPageData{
 		Dones:           dones,
 		CurrentSession:  currentSession,
 		TotalSessionDur: totalDur,
-		IsWorking:       workSessions != nil,
+		IsWorking:       len(workSessions) > 0 && !last.EndTime.Valid,
 	}
 
 	if err := h.Templates.ExecuteTemplate(w, "worklog.html", data); err != nil {

@@ -95,7 +95,9 @@ a:hover {
 /* Panels */
 .date-window,
 .working-window,
-.day-log {
+.day-log,
+.session
+{
     background-color: var(--bg-secondary);
     border: var(--border-width) solid var(--border-color);
     border-radius: var(--border-radius);

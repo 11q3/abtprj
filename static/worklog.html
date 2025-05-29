@@ -29,10 +29,13 @@
                 Currently working: <strong><span id="working-indicator">{{.IsWorking}}</span></strong>
             </div>
         </section>
+        <section class="session">
         <div class="session-summary">
-            Current work session: <span id="session-current">{{.CurrentSession}}</span>,
-            Total: <span id="session-total">{{.TotalSessionDur}}</span>
+            <header class="window-header">Current work session: </header>
+            <span id="session-current">{{.CurrentSession}}</span><br>
+            <strong>Total: </strong><span id="session-total">{{.TotalSessionDur}}</span>
         </div>
+        </section>
     </aside>
 
     <main class="history" id="history">
