@@ -62,9 +62,20 @@ func CompleteTask(db *sql.DB, name string) error {
 	return err
 }
 
-/*func GetWorkingStatus(db *sql.DB, date string) error {
-	_, err := db.Exec(
-		"SELECT start_time"
-	)
+func GetWorkingStatusForDay(db *sql.DB, date string) ([]WorkSession, error) {
+	rows, err := db.Query("SELECT start_time, end_time FROM work_sessions WHERE start_time::date = $1", date)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-}*/
+	var workSessions []WorkSession
+	for rows.Next() {
+		var ws WorkSession
+		if err := rows.Scan(&ws.StartTime, &ws.EndTime); err != nil {
+			continue
+		}
+		workSessions = append(workSessions, ws)
+	}
+	return workSessions, rows.Err()
+}

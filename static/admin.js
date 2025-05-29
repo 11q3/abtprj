@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const button = document.getElementById("work-toggle-btn");
 
     try {
-        const res = await fetch("/work-status");
+        const res = await fetch("/admin/get-work-status");
         const data = await res.json();
         const working = data.working;
 

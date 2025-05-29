@@ -15,8 +15,8 @@ type Task struct {
 
 type WorkSession struct {
 	Date      string // YYYY-MM-D
-	StartTime string
-	EndTime   string
+	StartTime time.Time
+	EndTime   sql.NullTime
 	Duration  string
 	Name      string
 	Status    string
