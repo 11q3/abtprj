@@ -71,7 +71,8 @@ func (h *Handler) renderWorklogPage(w http.ResponseWriter, r *http.Request) {
 		now := time.Now().In(loc)
 		startFmt := last.StartTime.In(loc).Format("15:04:05")
 		endFmt := now.Format("15:04:05")
-		currentSession = startFmt + " - " + endFmt
+		currentSessionDuration := time.Since(last.StartTime)
+		currentSession = startFmt + " - " + endFmt + " (" + currentSessionDuration.Truncate(time.Second).String() + ")"
 		totalDur += now.Sub(last.StartTime.In(loc))
 	}
 

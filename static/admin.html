@@ -6,52 +6,51 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <div class="header">
-        <h1>Admin 11q2</h1>
-    </div>
+<div class="header">
+    <h1>Admin 11q2</h1>
+</div>
 
-    <div class="main-container" style="padding: 20px;">
-        <h2>New Task</h2>
+<div class="main-container" style="padding: 20px;">
+    <h2>New Task</h2>
 
-        <form action="/admin/add-task" method="POST">
-            <div>
-                <label for="name">Task Name:</label><br>
-                <input type="text" id="name" name="name" required style="width: 300px;">
-            </div>
-            <div style="margin-top: 10px;">
-                <label for="description">Description:</label><br>
-                <textarea id="description" name="description" rows="4" style="width: 300px;"></textarea>
-            </div>
-            <div style="margin-top: 10px;">
-                <button type="submit">Add Task</button>
-            </div>
-        </form>
+    <form action="/admin/add-task" method="POST">
+        <div>
+            <label for="name">Task Name:</label><br>
+            <input type="text" id="name" name="name" required style="width: 300px;">
+        </div>
+        <div style="margin-top: 10px;">
+            <label for="description">Description:</label><br>
+            <textarea id="description" name="description" rows="4" style="width: 300px;"></textarea>
+        </div>
+        <div style="margin-top: 10px;">
+            <button type="submit">Add Task</button>
+        </div>
+    </form>
 
-        <hr style="margin: 40px 0;">
+    <hr style="margin: 40px 0;">
 
-        <h2>Current Tasks</h2>
+    <h2>Current Tasks</h2>
 
-        <ul>
-            {{range .Todos}}
-            <li style="margin-bottom: 10px;">
-                <strong>{{.Name}}</strong> — {{.Description}}
-                <form action="/admin/complete-task" method="POST" style="display:inline;">
-                    <input type="hidden" name="name" value="{{.Name}}">
-                    <button type="submit">Mark as Done</button>
-                </form>
-            </li>
-            {{else}}
-            <li>No tasks yet.</li>
-            {{end}}
-        </ul>
-    </div>
+    <ul>
+        {{range .Todos}}
+        <li style="margin-bottom: 10px;">
+            <strong>{{.Name}}</strong> — {{.Description}}
+            <form class="complete-form" action="/admin/complete-task" method="POST" style="display:inline;">
+                <input type="hidden" name="name" value="{{.Name}}">
+                <button type="submit">Mark as Done</button>
+            </form>
+        </li>
+        {{else}}
+        <li>No tasks yet.</li>
+        {{end}}
+    </ul>
+</div>
 
-    <div class="window-content">
-        Currently working: <strong><span id="working-indicator">...</span></strong>
-        <button id="work-toggle-btn">...</button>
-    </div>
+<div class="window-content" style="margin: 20px;">
+    Currently working: <strong><span id="working-indicator">...</span></strong>
+    <button id="work-toggle-btn">...</button>
+</div>
 
-
-    <script src="/static/admin.js"></script>
+<script src="/static/admin.js"></script>
 </body>
 </html>

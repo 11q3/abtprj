@@ -58,7 +58,5 @@ document.addEventListener("DOMContentLoaded", async () => {
     function updateUI() {
         indicator.textContent = working ? "YES" : "NO";
     }
-    
-
 })
-;
+
