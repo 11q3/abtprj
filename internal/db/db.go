@@ -57,10 +57,18 @@ func AddTask(db *sql.DB, name, description string) error {
 }
 
 func CompleteTask(db *sql.DB, name string) error {
-	_, err := db.Exec(
-		"UPDATE tasks SET status = 'done', done_at = NOW() WHERE name = $1",
+	isActive, session, err := checkIfActiveSessions(db)
+	if !isActive || session == nil {
+		log.Printf("attempting to end a task without active session: %v", err)
+		return err
+	}
+	result, err := db.Exec(
+		"UPDATE tasks SET status = 'done', done_at = NOW(), session_id = $1 WHERE name = $2",
+		session.Id,
 		name,
 	)
+
+	log.Printf("sql.Result: %#v", result)
 	return err
 }
 

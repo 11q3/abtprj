@@ -37,6 +37,20 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         working = data.working;
         updateUI();
+
+        // --- 4) Work session summary ---
+        const sessionCountEl = document.getElementById("session-current");
+        const sessionTotalEl = document.getElementById("session-total");
+
+        try {
+            const res = await fetch("/admin/get-work-summary");
+            const data = await res.json();
+            sessionCountEl.textContent = data.count;
+            sessionTotalEl.textContent = data.total;
+        } catch (e) {
+            console.error("Failed to fetch session summary", e);
+        }
+
     } catch (e) {
         console.error("Failed to fetch status", e);
     }

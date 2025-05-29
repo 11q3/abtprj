@@ -9,10 +9,17 @@ import (
 	"abtprj/internal/db"
 )
 
+type AdminPageData struct {
+	Todos           []db.Task
+	CurrentSession  string
+	TotalSessionDur string
+	IsWorking       bool
+}
+
 func (h *Handler) AdminHandler(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.Method == http.MethodGet && r.URL.Path == "/admin/":
-		h.listTasks(w, r)
+		h.renderAdminPage(w)
 	case r.Method == http.MethodPost && r.URL.Path == "/admin/add-task":
 		h.addTask(w, r)
 	case r.Method == http.MethodPost && r.URL.Path == "/admin/complete-task":
@@ -28,14 +35,23 @@ func (h *Handler) AdminHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) listTasks(w http.ResponseWriter, r *http.Request) {
-	tasks, err := db.GetTodoTasks(h.DB)
+func (h *Handler) renderAdminPage(w http.ResponseWriter) {
+	todos, err := db.GetTodoTasks(h.DB)
+
 	if err != nil {
-		log.Printf("listTasks query error: %v", err)
+		log.Printf("get tasks query error: %v", err)
 		http.Error(w, "db error", http.StatusInternalServerError)
 		return
 	}
-	if err := h.Templates.ExecuteTemplate(w, "admin.html", struct{ Tasks []db.Task }{tasks}); err != nil {
+
+	data := AdminPageData{
+		Todos: todos,
+		//CurrentSession:   sessions,
+		//TotalSessionDur: total.String(),
+		//IsWorking:       isWorking,
+	}
+
+	if err := h.Templates.ExecuteTemplate(w, "admin.html", data); err != nil {
 		log.Printf("template exec error: %v", err)
 	}
 }
