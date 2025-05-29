@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"log"
 	"time"
 )
 
@@ -78,4 +79,30 @@ func GetWorkingStatusForDay(db *sql.DB, date string) ([]WorkSession, error) {
 		workSessions = append(workSessions, ws)
 	}
 	return workSessions, rows.Err()
+}
+
+func StartWorkSession(db *sql.DB) error {
+	_, err := checkIfActiveSessions(db)
+	if err != nil {
+		log.Printf("Attepmpting to create another worksession, while active sessions exist %v", err)
+		return err
+	}
+
+	_, err = db.Exec("INSERT INTO work_sessions(start_time) VALUES ($1)", time.Now())
+	if err != nil {
+		log.Printf("Error inserting work session: %v", err)
+		return err
+	}
+	return err
+}
+
+func checkIfActiveSessions(db *sql.DB) (bool, error) {
+	row := db.QueryRow("SELECT COUNT(*) FROM work_sessions WHERE end_time IS NULL")
+	var count int
+	if err := row.Scan(&count); err != nil {
+		log.Printf("Error checking active sessions: %v", err)
+		return false, err
+	}
+
+	return count > 0, nil
 }
