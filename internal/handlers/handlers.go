@@ -18,5 +18,6 @@ func NewHandler(db *sql.DB, templates *template.Template) *Handler {
 func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/", h.MainHandler)
 	mux.HandleFunc("/worklog/", h.WorkLogHandler)
+	mux.HandleFunc("/stats/", h.StatsHandler)
 	mux.HandleFunc("/admin/", h.AdminHandler)
 }

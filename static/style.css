@@ -26,6 +26,12 @@
     --border-radius: 6px;
     --border-width: 1px;
     --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+
+    --color-level-0: #ebedf0;
+    --color-level-1: #c6e48b;
+    --color-level-2: #7bc96f;
+    --color-level-3: #239a3b;
+    --color-level-4: #196127;
 }
 
 /* Global resets */
@@ -153,6 +159,33 @@ a:hover {
     cursor: pointer;
 }
 
+.contrib-calendar {
+    display: grid;
+    grid-template-columns: repeat(53, 12px);
+    grid-gap: 4px;
+    padding: 8px;
+}
+.contrib-calendar .day {
+    width: 12px;
+    height: 12px;
+    background-color: var(--color-level-0);
+}
+.contrib-calendar .day.level-1 { background-color: var(--color-level-1); }
+.contrib-calendar .day.level-2 { background-color: var(--color-level-2); }
+.contrib-calendar .day.level-3 { background-color: var(--color-level-3); }
+.contrib-calendar .day.level-4 { background-color: var(--color-level-4); }
+.contrib-legend {
+    display: flex;
+    align-items: center;
+    font-size: 0.8em;
+    margin-top: 4px;
+}
+.contrib-legend .box {
+    width: 12px; height: 12px;
+    margin: 0 2px;
+    background-color: var(--color-level-0);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .main-container {
@@ -187,3 +220,4 @@ input[type="date"]::-moz-calendar-picker-indicator {
     opacity: 0;
     cursor: pointer;
 }
+
