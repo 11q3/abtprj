@@ -6,51 +6,35 @@
   <title>11q2’s Stats</title>
   <link rel="stylesheet" href="/static/style.css">
   <style>
-    /* ─────────────────────────────────────────────────────────
-       we make an 8×54 grid:
-         • col-1 is for Mon/Wed/Fri labels (40px)
-         • col-2…54 are the 53 week-columns (12px each)
-         • row-1 is the month-header (auto-height)
-         • row-2…8 are Sun-Sat (12px each)
-    ───────────────────────────────────────────────────────── */
     .contrib-graph {
       display: grid;
-      grid-template-columns: 40px repeat(53,12px);
-      grid-template-rows: auto repeat(7,12px);
+      grid-template-columns: 40px repeat(53, 12px);
+      grid-template-rows: auto repeat(7, 12px);
       grid-column-gap: 4px;
       grid-row-gap: 4px;
       padding: 8px;
     }
-
-    /* month-names across the top row */
     .contrib-graph .month-label {
+      grid-row: 1;
       font-size: 0.75em;
       color: var(--text-secondary);
-      grid-row: 1;
     }
-
-    /* weekday labels down the left */
     .contrib-graph .weekday-label {
+      grid-column: 1;
       font-size: 0.75em;
       color: var(--text-secondary);
       text-align: right;
       padding-right: 6px;
-      grid-column: 1;
     }
-
-    /* the little squares */
     .contrib-graph .day {
-      width: 12px;
-      height: 12px;
+      width: 12px; height: 12px;
       border-radius: 2px;
       background-color: var(--color-level-0);
     }
-    .contrib-graph .day.level-1 { background-color: var(--color-level-1) }
-    .contrib-graph .day.level-2 { background-color: var(--color-level-2) }
-    .contrib-graph .day.level-3 { background-color: var(--color-level-3) }
-    .contrib-graph .day.level-4 { background-color: var(--color-level-4) }
-
-    /* legend */
+    .contrib-graph .day.level-1 { background-color: var(--color-level-1); }
+    .contrib-graph .day.level-2 { background-color: var(--color-level-2); }
+    .contrib-graph .day.level-3 { background-color: var(--color-level-3); }
+    .contrib-graph .day.level-4 { background-color: var(--color-level-4); }
     .contrib-legend {
       display: flex; align-items: center;
       font-size: 0.75em;
@@ -58,15 +42,15 @@
       color: var(--text-secondary);
     }
     .contrib-legend .box {
-      width: 12px; height: 12px;
-      margin: 0 4px;
-      border-radius: 2px;
+      width:12px; height:12px;
+      margin:0 4px;
+      border-radius:2px;
       background-color: var(--color-level-0);
     }
-    .contrib-legend .box.level-1 { background-color: var(--color-level-1) }
-    .contrib-legend .box.level-2 { background-color: var(--color-level-2) }
-    .contrib-legend .box.level-3 { background-color: var(--color-level-3) }
-    .contrib-legend .box.level-4 { background-color: var(--color-level-4) }
+    .contrib-legend .box.level-1 { background-color: var(--color-level-1); }
+    .contrib-legend .box.level-2 { background-color: var(--color-level-2); }
+    .contrib-legend .box.level-3 { background-color: var(--color-level-3); }
+    .contrib-legend .box.level-4 { background-color: var(--color-level-4); }
   </style>
 </head>
 <body>
@@ -76,7 +60,7 @@
     <ul>
       <li><a href="/">Dashboard</a></li>
       <li><a href="/worklog/">Tasks</a></li>
-      <li><a href="/stats/">Stats</a></li>
+      <li><a href="/stats">Stats</a></li>
       <li><a href="#">Settings</a></li>
     </ul>
   </nav>
@@ -84,30 +68,36 @@
 
 <div class="main-container">
   <main class="stats">
+
     <!-- TASKS GRAPH -->
     <section class="stats-window">
       <header class="window-header">Tasks per Day</header>
       <div class="window-content">
         <div class="contrib-graph">
-          {{/* MONTH LABELS: each entry has .Name (e.g. "Jun") and .Col (2–54) */}}
-          {{ range .TaskMonths }}
-          <div class="month-label"
-               style="grid-column: {{ .Col }};">
-            {{ .Name }}
-          </div>
-          {{ end }}
 
-          {{/* WEEKDAY LABELS on the left */}}
-          <div class="weekday-label" style="grid-row: 3;">Mon</div>
-          <div class="weekday-label" style="grid-row: 5;">Wed</div>
-          <div class="weekday-label" style="grid-row: 7;">Fri</div>
+          <!-- hard-coded month labels -->
+          <div class="month-label" style="grid-column:2">Jan</div>
+          <div class="month-label" style="grid-column:6">Feb</div>
+          <div class="month-label" style="grid-column:10">Mar</div>
+          <div class="month-label" style="grid-column:15">Apr</div>
+          <div class="month-label" style="grid-column:19">May</div>
+          <div class="month-label" style="grid-column:24">Jun</div>
+          <div class="month-label" style="grid-column:28">Jul</div>
+          <div class="month-label" style="grid-column:32">Aug</div>
+          <div class="month-label" style="grid-column:37">Sep</div>
+          <div class="month-label" style="grid-column:41">Oct</div>
+          <div class="month-label" style="grid-column:46">Nov</div>
+          <div class="month-label" style="grid-column:50">Dec</div>
 
-          {{/* DAY CELLS: each entry has
-          .Row (2–8), .Col (2–54), .Level (0–4), .Date, .Count */}}
+          <!-- weekday labels -->
+          <div class="weekday-label" style="grid-row:3">Mon</div>
+          <div class="weekday-label" style="grid-row:5">Wed</div>
+          <div class="weekday-label" style="grid-row:7">Fri</div>
+
+          <!-- your Go‐driven day cells -->
           {{ range .TaskContributions }}
           <div class="day level-{{ .Level }}"
-               style="grid-column: {{ .Col }};
-                          grid-row:    {{ .Row }};"
+               style="grid-column: {{ .Col }}; grid-row: {{ .Row }};"
                data-date="{{ .Date }}"
                data-count="{{ .Count }}"
                title="{{ .Count }} tasks on {{ .Date }}">
@@ -127,25 +117,31 @@
       </div>
     </section>
 
-    <!-- SESSIONS GRAPH -->
+    <!-- SESSIONS GRAPH (same months & weekdays) -->
     <section class="stats-window">
       <header class="window-header">Work Sessions per Day</header>
       <div class="window-content">
         <div class="contrib-graph">
-          {{ range .SessionMonths }}
-          <div class="month-label" style="grid-column: {{ .Col }};">
-            {{ .Name }}
-          </div>
-          {{ end }}
+          <div class="month-label" style="grid-column:2">Jan</div>
+          <div class="month-label" style="grid-column:6">Feb</div>
+          <div class="month-label" style="grid-column:10">Mar</div>
+          <div class="month-label" style="grid-column:15">Apr</div>
+          <div class="month-label" style="grid-column:19">May</div>
+          <div class="month-label" style="grid-column:24">Jun</div>
+          <div class="month-label" style="grid-column:28">Jul</div>
+          <div class="month-label" style="grid-column:32">Aug</div>
+          <div class="month-label" style="grid-column:37">Sep</div>
+          <div class="month-label" style="grid-column:41">Oct</div>
+          <div class="month-label" style="grid-column:46">Nov</div>
+          <div class="month-label" style="grid-column:50">Dec</div>
 
-          <div class="weekday-label" style="grid-row: 3;">Mon</div>
-          <div class="weekday-label" style="grid-row: 5;">Wed</div>
-          <div class="weekday-label" style="grid-row: 7;">Fri</div>
+          <div class="weekday-label" style="grid-row:3">Mon</div>
+          <div class="weekday-label" style="grid-row:5">Wed</div>
+          <div class="weekday-label" style="grid-row:7">Fri</div>
 
           {{ range .SessionContributions }}
           <div class="day level-{{ .Level }}"
-               style="grid-column: {{ .Col }};
-                          grid-row:    {{ .Row }};"
+               style="grid-column: {{ .Col }}; grid-row: {{ .Row }};"
                data-date="{{ .Date }}"
                data-count="{{ .Count }}"
                title="{{ .Count }} sessions on {{ .Date }}">
@@ -164,8 +160,8 @@
         </div>
       </div>
     </section>
+
   </main>
 </div>
-
 </body>
 </html>

@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"abtprj/internal/db"
 	"log"
 	"net/http"
+	"time"
 )
 
 type MonthLabel struct {
@@ -28,49 +30,122 @@ func (h *Handler) StatsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) renderStatsPage(w http.ResponseWriter, r *http.Request) {
-	var a = DayStat{
-		"2025-05-29",
-		4,
-		4,
-		6,
-		22,
-	}
-	var c = DayStat{
-		"2025-05-30",
-		1,
-		1,
-		7,
-		22,
-	}
-	var d = DayStat{
-		"2025-05-25",
-		2,
-		1,
-		2,
-		21,
-	}
-	var b = []DayStat{a, c, d, a, c, d, a, c, d, a, c, d, a, c, d, a, c, d}
+	var emptyTasks = generateEmptyDayStats()
 
-	var j = MonthLabel{
-		"May",
-		22,
-	}
-
-	var g = []MonthLabel{j}
+	taskStats := h.populateDayStatsWithTasks(emptyTasks)
+	sessionStats := h.populateDayStatsWithWorkSessions(emptyTasks)
 
 	data := struct {
-		TaskMonths           []MonthLabel
 		TaskContributions    []DayStat
-		SessionMonths        []MonthLabel
 		SessionContributions []DayStat
 	}{
-		g,
-		b,
-		g,
-		b,
+		taskStats,
+		sessionStats,
 	}
 
 	if err := h.Templates.ExecuteTemplate(w, "stats.html", data); err != nil {
 		log.Printf("template exec error: %v", err)
 	}
+}
+
+func generateEmptyDayStats() []DayStat {
+	days := make([]DayStat, 0, 52*7)
+	for week := 1; week <= 52; week++ {
+		for dow := 0; dow < 7; dow++ {
+			days = append(days, DayStat{"", 0, 0, dow + 2, week + 1})
+		}
+	}
+	return days
+}
+
+func (h *Handler) populateDayStatsWithTasks(emptyDayStats []DayStat) []DayStat {
+	year := time.Now().Year()
+	start := time.Date(year, time.January, 1, 0, 0, 0, 0, time.UTC)
+	end := time.Date(year, time.December, 31, 23, 59, 59, 0, time.UTC)
+
+	// fetch both the slice of tasks and error
+	tasks, err := db.GetDoneTasks(h.DB, start, end)
+	if err != nil {
+		return nil
+	}
+
+	// copy your 52×7 grid
+	stats := make([]DayStat, len(emptyDayStats))
+	copy(stats, emptyDayStats)
+
+	for _, t := range tasks {
+		// unwrap the NullTime
+		if !t.DoneAt.Valid {
+			continue
+		}
+		d := t.DoneAt.Time
+
+		// get ISO week (Mon=1…Sun=7 → week 1…53)
+		_, isoWeek := d.ISOWeek()
+		weekIdx := isoWeek - 1 // 0-based index
+
+		// convert Go’s Sunday=0…Saturday=6 → Monday=0…Sunday=6
+		dowIdx := (int(d.Weekday()) + 6) % 7
+
+		idx := weekIdx*7 + dowIdx
+		if idx < 0 || idx >= len(stats) {
+			// skip out-of-range (e.g. ISO week 53 spill)
+			continue
+		}
+
+		stats[idx].Date = d.Format("2006-01-02")
+		stats[idx].Count++
+		stats[idx].Level = stats[idx].Count
+		if stats[idx].Level > 4 {
+			stats[idx].Level = 4
+		}
+	}
+
+	return stats
+}
+
+func (h *Handler) populateDayStatsWithWorkSessions(emptyDayStats []DayStat) []DayStat { //TODO later do with time
+	year := time.Now().Year()
+	start := time.Date(year, time.January, 1, 0, 0, 0, 0, time.UTC)
+	end := time.Date(year, time.December, 31, 23, 59, 59, 0, time.UTC)
+
+	// fetch both the slice of tasks and error
+	tasks, err := db.GetWorkingSessions(h.DB, start, end)
+	if err != nil {
+		return nil
+	}
+
+	// copy your 52×7 grid
+	stats := make([]DayStat, len(emptyDayStats))
+	copy(stats, emptyDayStats)
+
+	for _, s := range tasks {
+		// unwrap the NullTime
+		if !s.EndTime.Valid {
+			continue
+		}
+		d := s.EndTime.Time
+
+		// get ISO week (Mon=1…Sun=7 → week 1…53)
+		_, isoWeek := d.ISOWeek()
+		weekIdx := isoWeek - 1 // 0-based index
+
+		// convert Go’s Sunday=0…Saturday=6 → Monday=0…Sunday=6
+		dowIdx := (int(d.Weekday()) + 6) % 7
+
+		idx := weekIdx*7 + dowIdx
+		if idx < 0 || idx >= len(stats) {
+			// skip out-of-range (e.g. ISO week 53 spill)
+			continue
+		}
+
+		stats[idx].Date = d.Format("2006-01-02")
+		stats[idx].Count++
+		stats[idx].Level = stats[idx].Count
+		if stats[idx].Level > 4 {
+			stats[idx].Level = 4
+		}
+	}
+
+	return stats
 }

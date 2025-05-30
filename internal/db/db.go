@@ -90,6 +90,24 @@ func GetWorkingSessionsForDay(db *sql.DB, date string) ([]WorkSession, error) {
 	return workSessions, rows.Err()
 }
 
+func GetWorkingSessions(db *sql.DB, start, end time.Time) ([]WorkSession, error) {
+	rows, err := db.Query("SELECT start_time, end_time FROM work_sessions WHERE start_time > $1 AND end_time < $2", start, end)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var workSessions []WorkSession
+	for rows.Next() {
+		var ws WorkSession
+		if err := rows.Scan(&ws.StartTime, &ws.EndTime); err != nil {
+			continue
+		}
+		workSessions = append(workSessions, ws)
+	}
+	return workSessions, rows.Err()
+}
+
 func StartWorkSession(db *sql.DB) error {
 	isActive, _, err := checkIfActiveSessions(db)
 	if isActive {
