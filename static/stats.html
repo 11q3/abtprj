@@ -143,8 +143,8 @@
           <div class="day level-{{ .Level }}"
                style="grid-column: {{ .Col }}; grid-row: {{ .Row }};"
                data-date="{{ .Date }}"
-               data-count="{{ .Count }}"
-               title="{{ .Count }} sessions on {{ .Date }}">
+               data-count="{{ .SessionDur }}"
+               title="{{ .SessionDur }} session duration on {{ .Date }}">
           </div>
           {{ end }}
         </div>
