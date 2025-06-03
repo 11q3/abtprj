@@ -13,6 +13,7 @@ type WorklogPageData struct {
 	CurrentSession  string
 	TotalSessionDur time.Duration
 	IsWorking       bool
+	AllSessions     []string
 }
 
 func (h *Handler) WorkLogHandler(w http.ResponseWriter, r *http.Request) {
@@ -76,6 +77,25 @@ func (h *Handler) renderWorklogPage(w http.ResponseWriter, r *http.Request) {
 		totalDur += now.Sub(last.StartTime.In(loc))
 	}
 
+	var sessionStrings []string
+	for _, sess := range workSessions {
+		start := sess.StartTime.In(loc).Format("15:04:05")
+		var entry string
+
+		if sess.EndTime.Valid {
+			end := sess.EndTime.Time.In(loc).Format("15:04:05")
+			dur := sess.EndTime.Time.Sub(sess.StartTime).Truncate(time.Second)
+			entry = start + " - " + end + " (" + dur.String() + ")"
+			totalDur += dur
+		} else {
+			entry = start + " - (ongoing)"
+			now := time.Now().In(loc)
+			totalDur += now.Sub(sess.StartTime.In(loc)).Truncate(time.Second)
+		}
+
+		sessionStrings = append(sessionStrings, entry)
+	}
+
 	totalDur = totalDur.Truncate(time.Second)
 
 	data := WorklogPageData{
@@ -83,6 +103,7 @@ func (h *Handler) renderWorklogPage(w http.ResponseWriter, r *http.Request) {
 		CurrentSession:  currentSession,
 		TotalSessionDur: totalDur,
 		IsWorking:       len(workSessions) > 0 && !last.EndTime.Valid,
+		AllSessions:     sessionStrings,
 	}
 
 	if err := h.Templates.ExecuteTemplate(w, "worklog.html", data); err != nil {

@@ -32,7 +32,11 @@
         <section class="session">
         <div class="session-summary">
             <header class="window-header">Today's work sessions: </header>
-            <span id="session-current">{{.CurrentSession}}</span><br>
+            <ul id="session-list">
+                {{ range .AllSessions }}
+                <li>{{ . }}</li>
+                {{ end }}
+            </ul>
             <strong>Total: </strong><span id="session-total">{{.TotalSessionDur}}</span>
         </div>
         </section>
