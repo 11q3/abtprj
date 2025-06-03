@@ -25,3 +25,10 @@ type WorkSession struct {
 	Tasks     []Task
 	CreatedAt time.Time
 }
+
+type Admin struct {
+	Id           int
+	Login        string
+	PasswordHash string
+	CreatedAt    time.Time
+}

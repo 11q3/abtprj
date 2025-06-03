@@ -1,6 +1,7 @@
 package app
 
 import (
+	"abtprj/internal/db"
 	"abtprj/internal/handlers"
 	"database/sql"
 	_ "github.com/lib/pq"
@@ -19,6 +20,10 @@ func New() (*App, error) {
 	connStr := "postgres://postgres:1121231@localhost:5432/abtprj?sslmode=disable"
 	dbConn, err := sql.Open("postgres", connStr)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := db.InitDefaultAdmin(dbConn); err != nil {
 		return nil, err
 	}
 

@@ -1,8 +1,11 @@
 package handlers
 
 import (
+	_ "database/sql"
+	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -30,6 +33,9 @@ func (h *Handler) AdminHandler(w http.ResponseWriter, r *http.Request) {
 		h.startWorkSession(w, r)
 	case r.Method == http.MethodPost && r.URL.Path == "/admin/end-work-session":
 		h.endWorkSession(w, r)
+	case r.Method == http.MethodPost && r.URL.Path == "/admin/login":
+		h.login(w, r)
+
 	default:
 		http.NotFound(w, r)
 	}
@@ -46,14 +52,43 @@ func (h *Handler) renderAdminPage(w http.ResponseWriter) {
 
 	data := AdminPageData{
 		Todos: todos,
-		//CurrentSession:   sessions,
-		//TotalSessionDur: total.String(),
-		//IsWorking:       isWorking,
 	}
 
 	if err := h.Templates.ExecuteTemplate(w, "admin.html", data); err != nil {
 		log.Printf("template exec error: %v", err)
 	}
+}
+
+func (h *Handler) initDefaultAdmin() error {
+	login := os.Getenv("LOGIN")
+	if login == "" {
+		login = "admin"
+	}
+
+	password := os.Getenv("PASSWORD")
+	if password == "" {
+		password = "admin"
+	}
+
+	isExists, err := db.CheckIfAdminExists(h.DB)
+	if err != nil {
+		return err
+	}
+	if isExists {
+		log.Println("admin already exists")
+		return nil
+	}
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	err = db.GenerateAdmin(h.DB, login, hash)
+	if err != nil {
+		log.Printf("generate admin error: %v", err)
+		return err
+	}
+	return nil
 }
 
 func (h *Handler) addTask(w http.ResponseWriter, r *http.Request) {
@@ -126,4 +161,17 @@ func (h *Handler) endWorkSession(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "db error", http.StatusInternalServerError)
 		return
 	}
+}
+
+func (h *Handler) login(w http.ResponseWriter, r *http.Request) bool {
+	isAdmin, err := db.CheckIfAdminExists(h.DB)
+	if err != nil {
+		log.Printf("checkIfAdminExists exec error: %v", err)
+		http.Error(w, "db error", http.StatusInternalServerError)
+		return false
+	}
+
+	const sessionCookieName = "admin_session"
+
+	return isAdmin
 }

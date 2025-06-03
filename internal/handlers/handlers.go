@@ -19,5 +19,6 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/", h.MainHandler)
 	mux.HandleFunc("/worklog/", h.WorkLogHandler)
 	mux.HandleFunc("/stats/", h.StatsHandler)
-	mux.HandleFunc("/admin/", h.AdminHandler)
+	mux.HandleFunc("/admin/", h.requireAdmin(h.AdminHandler))
+	mux.HandleFunc("/login", h.HandleLogin)
 }

@@ -3,7 +3,9 @@ package db
 import (
 	"database/sql"
 	"errors"
+	"golang.org/x/crypto/bcrypt"
 	"log"
+	"os"
 	"time"
 )
 
@@ -152,4 +154,77 @@ func checkIfActiveSessions(db *sql.DB) (bool, *WorkSession, error) {
 	}
 
 	return true, &ws, nil
+}
+
+func CheckIfAdminExists(db *sql.DB) (bool, error) {
+	row := db.QueryRow("SELECT id, login, created_at FROM admin")
+
+	var admin Admin
+	err := row.Scan(&admin.Id, &admin.Login, &admin.CreatedAt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Printf("Attempting to login as admin, while admin does not exist")
+			return false, nil
+		}
+		log.Printf("Error scanning admin: %v", err)
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func GetAdminByLogin(db *sql.DB, login string) (Admin, error) {
+	row := db.QueryRow("SELECT id, login, password_hash, created_at FROM admin where login = $1", login)
+
+	var admin Admin
+	err := row.Scan(&admin.Id, &admin.Login, &admin.PasswordHash, &admin.CreatedAt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Printf("Admin not found")
+			return Admin{}, nil
+		}
+		log.Printf("Error scanning admin: %v", err)
+		return Admin{}, err
+	}
+	return admin, nil
+}
+
+func InitDefaultAdmin(db *sql.DB) error {
+	login := os.Getenv("LOGIN")
+	if login == "" {
+		login = "admin"
+	}
+	password := os.Getenv("PASSWORD")
+	if password == "" {
+		password = "admin"
+	}
+
+	exists, err := CheckIfAdminExists(db)
+	if err != nil {
+		return err
+	}
+	if exists {
+		log.Println("Admin already exists")
+		return nil
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	if err := GenerateAdmin(db, login, hash); err != nil {
+		return err
+	}
+
+	log.Println("Default admin created successfully")
+	return nil
+}
+
+func GenerateAdmin(db *sql.DB, login string, hash []byte) error {
+	_, err := db.Exec("INSERT INTO admin (login, password_hash) VALUES ($1, $2)", login, string(hash))
+	if err != nil {
+		return err
+	}
+	return nil
 }
