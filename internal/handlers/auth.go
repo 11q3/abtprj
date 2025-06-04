@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"abtprj/internal/db"
+	"abtprj/internal/repository"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
@@ -36,7 +36,7 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	login := r.FormValue("login")
 	password := r.FormValue("password")
 
-	admin, err := db.GetAdminByLogin(h.DB, login)
+	admin, err := repository.GetAdminByLogin(h.DB, login)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "Invalid login or password", http.StatusBadRequest)

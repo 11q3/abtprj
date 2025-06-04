@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"abtprj/internal/db"
+	"abtprj/internal/repository"
 	"abtprj/internal/utils"
 	"log"
 	"net/http"
@@ -9,7 +9,7 @@ import (
 )
 
 type WorklogPageData struct {
-	Dones           []db.Task
+	Dones           []repository.Task
 	CurrentSession  string
 	TotalSessionDur time.Duration
 	IsWorking       bool
@@ -36,14 +36,14 @@ func (h *Handler) renderWorklogPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dones, err := db.GetDoneTasks(h.DB, start, end)
+	dones, err := repository.GetDoneTasks(h.DB, start, end)
 	if err != nil {
 		log.Printf("worklog query error: %v", err)
-		http.Error(w, "db query error", http.StatusInternalServerError)
+		http.Error(w, "repository query error", http.StatusInternalServerError)
 		return
 	}
 
-	workSessions, err := db.GetWorkingSessionsForDay(h.DB, date)
+	workSessions, err := repository.GetWorkingSessionsForDay(h.DB, date)
 	if err != nil {
 		log.Printf("working status query error: %v", err)
 		http.Error(w, "get working status error", http.StatusInternalServerError)
@@ -55,7 +55,7 @@ func (h *Handler) renderWorklogPage(w http.ResponseWriter, r *http.Request) {
 		loc = time.Local
 	}
 
-	var last db.WorkSession
+	var last repository.WorkSession
 	if len(workSessions) > 0 {
 		last = workSessions[len(workSessions)-1]
 	}

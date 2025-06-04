@@ -1,8 +1,8 @@
 package app
 
 import (
-	"abtprj/internal/db"
 	"abtprj/internal/handlers"
+	"abtprj/internal/repository"
 	"database/sql"
 	_ "github.com/lib/pq"
 	"net/http"
@@ -23,7 +23,7 @@ func New() (*App, error) {
 		return nil, err
 	}
 
-	if err := db.InitDefaultAdmin(dbConn); err != nil {
+	if err := repository.InitDefaultAdmin(dbConn); err != nil {
 		return nil, err
 	}
 

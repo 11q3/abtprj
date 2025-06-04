@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"abtprj/internal/db"
+	"abtprj/internal/repository"
 	"log"
 	"net/http"
 	"time"
@@ -82,7 +82,7 @@ func (h *Handler) populateDayStatsWithTasks(emptyDayStats []DayTasksStat) []DayT
 	start := time.Date(year, time.January, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(year, time.December, 31, 23, 59, 59, 0, time.UTC)
 
-	tasks, err := db.GetDoneTasks(h.DB, start, end)
+	tasks, err := repository.GetDoneTasks(h.DB, start, end)
 	if err != nil {
 		return nil
 	}
@@ -122,7 +122,7 @@ func (h *Handler) populateDayStatsWithWorkSessions(emptyDayStats []DaySessionsSt
 	start := time.Date(year, time.January, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(year, time.December, 31, 23, 59, 59, 0, time.UTC)
 
-	sessions, err := db.GetWorkingSessions(h.DB, start, end)
+	sessions, err := repository.GetWorkingSessions(h.DB, start, end)
 	if err != nil {
 		return nil
 	}

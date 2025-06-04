@@ -9,11 +9,11 @@ import (
 	"strconv"
 	"time"
 
-	"abtprj/internal/db"
+	"abtprj/internal/repository"
 )
 
 type AdminPageData struct {
-	Todos           []db.Task
+	Todos           []repository.Task
 	CurrentSession  string
 	TotalSessionDur string
 	IsWorking       bool
@@ -42,11 +42,11 @@ func (h *Handler) AdminHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) renderAdminPage(w http.ResponseWriter) {
-	todos, err := db.GetTodoTasks(h.DB)
+	todos, err := repository.GetTodoTasks(h.DB)
 
 	if err != nil {
 		log.Printf("get tasks query error: %v", err)
-		http.Error(w, "db error", http.StatusInternalServerError)
+		http.Error(w, "repository error", http.StatusInternalServerError)
 		return
 	}
 
@@ -70,7 +70,7 @@ func (h *Handler) initDefaultAdmin() error {
 		password = "admin"
 	}
 
-	isExists, err := db.CheckIfAdminExists(h.DB)
+	isExists, err := repository.CheckIfAdminExists(h.DB)
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func (h *Handler) initDefaultAdmin() error {
 		return err
 	}
 
-	err = db.GenerateAdmin(h.DB, login, hash)
+	err = repository.GenerateAdmin(h.DB, login, hash)
 	if err != nil {
 		log.Printf("generate admin error: %v", err)
 		return err
@@ -98,9 +98,9 @@ func (h *Handler) addTask(w http.ResponseWriter, r *http.Request) {
 	}
 	name := r.FormValue("name")
 	descr := r.FormValue("description")
-	if err := db.AddTask(h.DB, name, descr); err != nil {
+	if err := repository.AddTask(h.DB, name, descr); err != nil {
 		log.Printf("addTask exec error: %v", err)
-		http.Error(w, "db insert error", http.StatusInternalServerError)
+		http.Error(w, "repository insert error", http.StatusInternalServerError)
 		return
 	}
 	http.Redirect(w, r, "/admin/", http.StatusSeeOther)
@@ -116,9 +116,9 @@ func (h *Handler) completeTask(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "missing task name", http.StatusBadRequest)
 		return
 	}
-	if err := db.CompleteTask(h.DB, name); err != nil {
+	if err := repository.CompleteTask(h.DB, name); err != nil {
 		log.Printf("completeTask exec error: %v", err)
-		http.Error(w, "db update error", http.StatusInternalServerError)
+		http.Error(w, "repository update error", http.StatusInternalServerError)
 		return
 	}
 	http.Redirect(w, r, "/admin/", http.StatusSeeOther)
@@ -128,10 +128,10 @@ func (h *Handler) getWorkingStatusForToday(w http.ResponseWriter, r *http.Reques
 	isWorking := false
 
 	today := time.Now().Format("2006-01-02")
-	sessions, err := db.GetWorkingSessionsForDay(h.DB, today)
+	sessions, err := repository.GetWorkingSessionsForDay(h.DB, today)
 	if err != nil {
 		log.Println("get working status error,", err)
-		http.Error(w, "db error", http.StatusInternalServerError)
+		http.Error(w, "repository error", http.StatusInternalServerError)
 		return
 	}
 	for _, s := range sessions {
@@ -146,28 +146,28 @@ func (h *Handler) getWorkingStatusForToday(w http.ResponseWriter, r *http.Reques
 }
 
 func (h *Handler) startWorkSession(w http.ResponseWriter, r *http.Request) {
-	err := db.StartWorkSession(h.DB)
+	err := repository.StartWorkSession(h.DB)
 	if err != nil {
 		log.Printf("startWorkSession exec error: %v", err)
-		http.Error(w, "db error", http.StatusInternalServerError)
+		http.Error(w, "repository error", http.StatusInternalServerError)
 		return
 	}
 }
 
 func (h *Handler) endWorkSession(w http.ResponseWriter, r *http.Request) {
-	err := db.EndWorkSession(h.DB)
+	err := repository.EndWorkSession(h.DB)
 	if err != nil {
 		log.Printf("endWorkSession exec error: %v", err)
-		http.Error(w, "db error", http.StatusInternalServerError)
+		http.Error(w, "repository error", http.StatusInternalServerError)
 		return
 	}
 }
 
 func (h *Handler) login(w http.ResponseWriter, r *http.Request) bool {
-	isAdmin, err := db.CheckIfAdminExists(h.DB)
+	isAdmin, err := repository.CheckIfAdminExists(h.DB)
 	if err != nil {
 		log.Printf("checkIfAdminExists exec error: %v", err)
-		http.Error(w, "db error", http.StatusInternalServerError)
+		http.Error(w, "repository error", http.StatusInternalServerError)
 		return false
 	}
 
