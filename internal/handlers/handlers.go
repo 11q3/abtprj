@@ -1,18 +1,20 @@
 package handlers
 
 import (
+	"abtprj/internal/app"
 	"database/sql"
 	"net/http"
 	"text/template"
 )
 
 type Handler struct {
-	DB        *sql.DB
-	Templates *template.Template
+	DB         *sql.DB
+	Templates  *template.Template
+	AppService app.AppService
 }
 
-func NewHandler(db *sql.DB, templates *template.Template) *Handler {
-	return &Handler{DB: db, Templates: templates}
+func NewHandler(db *sql.DB, templates *template.Template, appService app.AppService) *Handler {
+	return &Handler{DB: db, Templates: templates, AppService: appService}
 }
 
 func (h *Handler) RegisterRoutes(mux *http.ServeMux) {

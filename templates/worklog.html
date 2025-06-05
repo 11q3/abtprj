@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>11q2`s Worklog</title>
-    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 
 <body>
@@ -13,7 +13,7 @@
     <h1>11q2</h1>
     <nav class="nav" aria-label="Main navigation">
         <ul>
-            <li><a href="/static">Dashboard</a></li>
+            <li><a href="/">Dashboard</a></li>
             <li><a href="/worklog/">Tasks</a></li>
             <li><a href="/stats">Stats</a></li>
             <li><a href="#">Settings</a></li>
@@ -54,16 +54,16 @@
             <h2>Tasks done on this day:</h2>
             {{ if .Dones }}
             {{ range .Dones }}
-            <article class="day-log" data-date="{{ .DoneAt.Time.Format `2006-01-02` }}">
+            <article class="day-log" data-date="{{ .DoneAt.Format `2006-01-02` }}">
             <p>
                 <span class="task-name">{{ .Name }}</span> —
                 <span class="task-desc">{{ .Description }},</span>
                 DONE AT
                 <time
-                        datetime="{{ if .DoneAt.Valid }}{{ .DoneAt.Time.Format `2006-01-02T15:04:05Z07:00` }}{{ end }}"
+                        datetime="{{ if .DoneAt }}{{ .DoneAt.Format `2006-01-02T15:04:05Z07:00` }}{{ end }}"
                 >
-                {{ if .DoneAt.Valid }}
-                {{ .DoneAt.Time.Format "15:04:05" }}
+                {{ if .DoneAt }}
+                {{ .DoneAt.Format "15:04:05" }}
                 {{ else }}
                 -
                 {{ end }}
@@ -81,7 +81,7 @@
     </main>
 </div>
 
-<script src="/worklog.js"></script>
+<script src="/static/worklog.js"></script>
 </body>
 
 </html>

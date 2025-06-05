@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"abtprj/internal/repository"
-	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
 )
@@ -22,9 +20,7 @@ func (h *Handler) requireAdmin(handler http.HandlerFunc) http.HandlerFunc {
 
 func (h *Handler) LoginPage(w http.ResponseWriter, r *http.Request) {
 	if err := h.Templates.ExecuteTemplate(w, "login.html", nil); err != nil {
-		if err := r.ParseForm(); err != nil {
-			http.Error(w, "Failed to parse form", http.StatusInternalServerError)
-		}
+		http.Error(w, "Failed to render login page", http.StatusInternalServerError)
 	}
 }
 
@@ -36,24 +32,19 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	login := r.FormValue("login")
 	password := r.FormValue("password")
 
-	admin, err := repository.GetAdminByLogin(h.DB, login)
-	if err != nil {
-		log.Println(err)
-		http.Error(w, "Invalid login or password", http.StatusBadRequest)
-		return
-	}
-	if bcrypt.CompareHashAndPassword([]byte(admin.PasswordHash), []byte(password)) != nil {
-		log.Printf("Error login: %v", err)
+	if err := h.AppService.LoginAdmin(login, password); err != nil {
+		log.Printf("login error: %v", err)
 		err := h.Templates.ExecuteTemplate(w, "login.html", map[string]string{
 			"Error": "Invalid login or password",
 		})
 		if err != nil {
-			log.Printf("Error executing template: %v", err)
+			log.Printf("login error: %v", err)
 			return
 		}
 		return
 	}
 
+	// Set session cookie and redirect
 	http.SetCookie(w, &http.Cookie{
 		Name:     sessionCookieName,
 		Value:    "authenticated",
@@ -61,6 +52,5 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		SameSite: http.SameSiteStrictMode,
 	})
-
-	http.Redirect(w, r, "/admin", http.StatusSeeOther)
+	http.Redirect(w, r, "/admin/", http.StatusSeeOther)
 }

@@ -1,21 +1,18 @@
 package handlers
 
 import (
+	"abtprj/internal/app"
 	_ "database/sql"
-	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
-
-	"abtprj/internal/repository"
 )
 
 type AdminPageData struct {
-	Todos           []repository.Task
+	Todos           []app.Task
 	CurrentSession  string
-	TotalSessionDur string
+	TotalSessionDur time.Duration
 	IsWorking       bool
 }
 
@@ -34,7 +31,7 @@ func (h *Handler) AdminHandler(w http.ResponseWriter, r *http.Request) {
 	case r.Method == http.MethodPost && r.URL.Path == "/admin/end-work-session":
 		h.endWorkSession(w, r)
 	case r.Method == http.MethodPost && r.URL.Path == "/admin/login":
-		h.login(w, r)
+		h.handleLogin(w, r)
 
 	default:
 		http.NotFound(w, r)
@@ -42,7 +39,7 @@ func (h *Handler) AdminHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) renderAdminPage(w http.ResponseWriter) {
-	todos, err := repository.GetTodoTasks(h.DB)
+	todos, err := h.AppService.GetTodoTasks()
 
 	if err != nil {
 		log.Printf("get tasks query error: %v", err)
@@ -50,57 +47,68 @@ func (h *Handler) renderAdminPage(w http.ResponseWriter) {
 		return
 	}
 
+	today := time.Now().Format("2006-01-02")
+	sessions, err := h.AppService.GetWorkSessionsForDate(today)
+	if err != nil {
+		log.Printf("renderAdminPage GetWorkSessionsForDate error: %v", err)
+		http.Error(w, "failed to get sessions", http.StatusInternalServerError)
+		return
+	}
+
+	var lastSession app.WorkSession
+	if len(sessions) > 0 {
+		lastSession = sessions[len(sessions)-1]
+	}
+
+	loc, locErr := time.LoadLocation("Europe/Moscow")
+	if locErr != nil {
+		loc = time.Local
+	}
+
+	var currentSession string
+	var totalDur time.Duration
+	var isWorking bool
+
+	for _, sess := range sessions {
+		if sess.EndTime != nil {
+			totalDur += sess.EndTime.Sub(sess.StartTime)
+		}
+	}
+
+	if len(sessions) > 0 && lastSession.EndTime == nil {
+		isWorking = true
+		now := time.Now().In(loc)
+		startFmt := lastSession.StartTime.In(loc).Format("15:04:05")
+		endFmt := now.Format("15:04:05")
+		ongoingDur := now.Sub(lastSession.StartTime.In(loc)).Truncate(time.Second)
+		currentSession = startFmt + " - " + endFmt + " (" + ongoingDur.String() + ")"
+		totalDur += ongoingDur
+	}
+
 	data := AdminPageData{
-		Todos: todos,
+		Todos:           todos,
+		CurrentSession:  currentSession,
+		TotalSessionDur: totalDur.Truncate(time.Second),
+		IsWorking:       isWorking,
 	}
 
 	if err := h.Templates.ExecuteTemplate(w, "admin.html", data); err != nil {
 		log.Printf("template exec error: %v", err)
 	}
-}
 
-func (h *Handler) initDefaultAdmin() error {
-	login := os.Getenv("LOGIN")
-	if login == "" {
-		login = "admin"
-	}
-
-	password := os.Getenv("PASSWORD")
-	if password == "" {
-		password = "admin"
-	}
-
-	isExists, err := repository.CheckIfAdminExists(h.DB)
-	if err != nil {
-		return err
-	}
-	if isExists {
-		log.Println("admin already exists")
-		return nil
-	}
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-
-	err = repository.GenerateAdmin(h.DB, login, hash)
-	if err != nil {
-		log.Printf("generate admin error: %v", err)
-		return err
-	}
-	return nil
 }
 
 func (h *Handler) addTask(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "invalid form data", http.StatusBadRequest)
+		http.Error(w, "incorrect form values", http.StatusBadRequest)
 		return
 	}
 	name := r.FormValue("name")
-	descr := r.FormValue("description")
-	if err := repository.AddTask(h.DB, name, descr); err != nil {
-		log.Printf("addTask exec error: %v", err)
-		http.Error(w, "repository insert error", http.StatusInternalServerError)
+	description := r.FormValue("description")
+
+	if err := h.AppService.AddTask(name, description); err != nil {
+		log.Printf("addTask AddTask error: %v", err)
+		http.Error(w, "failed to add a task", http.StatusInternalServerError)
 		return
 	}
 	http.Redirect(w, r, "/admin/", http.StatusSeeOther)
@@ -108,34 +116,35 @@ func (h *Handler) addTask(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) completeTask(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "invalid form data", http.StatusBadRequest)
+		http.Error(w, "incorrect form values", http.StatusBadRequest)
 		return
 	}
 	name := r.FormValue("name")
 	if name == "" {
-		http.Error(w, "missing task name", http.StatusBadRequest)
+		http.Error(w, "task name is not present", http.StatusBadRequest)
 		return
 	}
-	if err := repository.CompleteTask(h.DB, name); err != nil {
-		log.Printf("completeTask exec error: %v", err)
-		http.Error(w, "repository update error", http.StatusInternalServerError)
+
+	if err := h.AppService.CompleteTask(name); err != nil {
+		log.Printf("completeTask CompleteTask error: %v", err)
+		http.Error(w, "failed to complete a task", http.StatusInternalServerError)
 		return
 	}
 	http.Redirect(w, r, "/admin/", http.StatusSeeOther)
 }
 
 func (h *Handler) getWorkingStatusForToday(w http.ResponseWriter, r *http.Request) {
-	isWorking := false
-
 	today := time.Now().Format("2006-01-02")
-	sessions, err := repository.GetWorkingSessionsForDay(h.DB, today)
+	sessions, err := h.AppService.GetWorkSessionsForDate(today)
 	if err != nil {
-		log.Println("get working status error,", err)
-		http.Error(w, "repository error", http.StatusInternalServerError)
+		log.Printf("getWorkingStatusForToday GetWorkSessionsForDate error: %v", err)
+		http.Error(w, "failed to get working status", http.StatusInternalServerError)
 		return
 	}
-	for _, s := range sessions {
-		if !s.EndTime.Valid {
+
+	isWorking := false
+	for _, sess := range sessions {
+		if sess.EndTime == nil {
 			isWorking = true
 			break
 		}
@@ -146,32 +155,47 @@ func (h *Handler) getWorkingStatusForToday(w http.ResponseWriter, r *http.Reques
 }
 
 func (h *Handler) startWorkSession(w http.ResponseWriter, r *http.Request) {
-	err := repository.StartWorkSession(h.DB)
-	if err != nil {
-		log.Printf("startWorkSession exec error: %v", err)
-		http.Error(w, "repository error", http.StatusInternalServerError)
+	if err := h.AppService.StartWorkSession(); err != nil {
+		log.Printf("startWorkSession StartWorkSession error: %v", err)
+		http.Error(w, "failed to start a session", http.StatusInternalServerError)
 		return
 	}
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Handler) endWorkSession(w http.ResponseWriter, r *http.Request) {
-	err := repository.EndWorkSession(h.DB)
-	if err != nil {
-		log.Printf("endWorkSession exec error: %v", err)
-		http.Error(w, "repository error", http.StatusInternalServerError)
+	if err := h.AppService.EndWorkSession(); err != nil {
+		log.Printf("endWorkSession EndWorkSession error: %v", err)
+		http.Error(w, "failed to end a session", http.StatusInternalServerError)
 		return
 	}
+	w.WriteHeader(http.StatusOK)
 }
 
-func (h *Handler) login(w http.ResponseWriter, r *http.Request) bool {
-	isAdmin, err := repository.CheckIfAdminExists(h.DB)
-	if err != nil {
-		log.Printf("checkIfAdminExists exec error: %v", err)
-		http.Error(w, "repository error", http.StatusInternalServerError)
-		return false
+func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "некорректные данные формы", http.StatusBadRequest)
+		return
+	}
+	login := r.FormValue("login")
+	password := r.FormValue("password")
+
+	if err := h.AppService.LoginAdmin(login, password); err != nil {
+		log.Printf("handleLogin LoginAdmin error: %v", err)
+		// Этот ответ можно настроить под ваши шаблоны: возвращаем страницу с ошибкой
+		h.Templates.ExecuteTemplate(w, "login.html", map[string]string{
+			"Error": "Incorrect login or password",
+		})
+		return
 	}
 
-	const sessionCookieName = "admin_session"
+	http.SetCookie(w, &http.Cookie{
+		Name:     "admin_session",
+		Value:    "authenticated",
+		HttpOnly: true,
+		Path:     "/",
+		SameSite: http.SameSiteStrictMode,
+	})
 
-	return isAdmin
+	http.Redirect(w, r, "/admin/", http.StatusSeeOther)
 }

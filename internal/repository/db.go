@@ -74,8 +74,14 @@ func CompleteTask(db *sql.DB, name string) error {
 	return err
 }
 
-func GetWorkingSessionsForDay(db *sql.DB, date string) ([]WorkSession, error) {
-	rows, err := db.Query("SELECT start_time, end_time FROM work_sessions WHERE start_time::date = $1", date)
+func GetWorkingSessionsForDay(db *sql.DB, start, end time.Time) ([]WorkSession, error) {
+	rows, err := db.Query(
+		`SELECT start_time, end_time
+		   FROM work_sessions
+		  WHERE start_time >= $1
+		    AND (end_time < $2 OR end_time IS NULL)`,
+		start, end,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +99,13 @@ func GetWorkingSessionsForDay(db *sql.DB, date string) ([]WorkSession, error) {
 }
 
 func GetWorkingSessions(db *sql.DB, start, end time.Time) ([]WorkSession, error) {
-	rows, err := db.Query("SELECT start_time, end_time FROM work_sessions WHERE start_time > $1 AND end_time < $2", start, end)
+	rows, err := db.Query(
+		`SELECT start_time, end_time
+		   FROM work_sessions
+		  WHERE start_time >= $1
+		    AND (end_time < $2 OR end_time IS NULL)`,
+		start, end,
+	)
 	if err != nil {
 		return nil, err
 	}
