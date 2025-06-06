@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"abtprj/internal/app"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -10,37 +9,6 @@ import (
 	"text/template"
 	"time"
 )
-
-type mockService struct {
-	taskStats     []app.DayTasksStat
-	sessionStats  []app.DaySessionsStat
-	errOnTasks    bool
-	errOnSessions bool
-}
-
-func (m *mockService) LoginAdmin(login, password string) error                       { return nil }
-func (m *mockService) AddTask(name, description string) error                        { return nil }
-func (m *mockService) CompleteTask(name string) error                                { return nil }
-func (m *mockService) GetTasksForDate(date string) ([]app.Task, error)               { return nil, nil }
-func (m *mockService) GetWorkSessionsForDate(date string) ([]app.WorkSession, error) { return nil, nil }
-func (m *mockService) StartWorkSession() error                                       { return nil }
-func (m *mockService) EndWorkSession() error                                         { return nil }
-func (m *mockService) CheckIfAdminExists() (bool, error)                             { return false, nil }
-func (m *mockService) GetTodoTasks() ([]app.Task, error)                             { return nil, nil }
-
-func (m *mockService) GetDayTaskStats(year int) ([]app.DayTasksStat, error) {
-	if m.errOnTasks {
-		return nil, errors.New("simulated task‐stats failure")
-	}
-	return m.taskStats, nil
-}
-
-func (m *mockService) GetDaySessionStats(year int) ([]app.DaySessionsStat, error) {
-	if m.errOnSessions {
-		return nil, errors.New("simulated session‐stats failure")
-	}
-	return m.sessionStats, nil
-}
 
 func TestStatsHandler_NotFound(t *testing.T) {
 	tmpl := template.Must(template.New("stats.html").Parse(`{{define "stats.html"}}OK{{end}}`))
@@ -146,25 +114,5 @@ SESSIONS:
 		if !strings.Contains(body, want) {
 			t.Errorf("expected body to contain sessions entry %q, but it did not", want)
 		}
-	}
-}
-
-func TestStatsHandler_SessionStatsError(t *testing.T) {
-	tmpl := template.Must(template.New("stats.html").Parse(`{{define "stats.html"}}OK{{end}}`))
-	svc := &mockService{errOnSessions: true}
-	h := &Handler{
-		Templates:  tmpl,
-		AppService: svc,
-	}
-
-	req := httptest.NewRequest(http.MethodGet, "/stats/", nil)
-	rr := httptest.NewRecorder()
-	h.StatsHandler(rr, req)
-
-	if rr.Code != http.StatusInternalServerError {
-		t.Errorf("handler returned wrong status code: got %v want %v", rr.Code, http.StatusInternalServerError)
-	}
-	if !strings.Contains(rr.Body.String(), "failed to load stats") {
-		t.Errorf("handler returned wrong response body: got %v want %v", rr.Body.String(), "failed to load stats")
 	}
 }

@@ -216,6 +216,7 @@ func (s *DefaultAppService) GetTodoTasks() ([]Task, error) {
 	}
 	return ConvertRepoTasks(repoTasks), nil
 }
+
 func (s *DefaultAppService) CheckIfAdminExists() (bool, error) {
 	exists, err := repository.CheckIfAdminExists(s.DB)
 	if err != nil {
