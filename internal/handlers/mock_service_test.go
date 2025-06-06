@@ -11,6 +11,7 @@ type mockService struct {
 	isWorking       bool
 	sessionsForDate []app.WorkSession
 	tasksForDate    []app.Task
+	todos           []app.Task
 }
 
 func (m *mockService) LoginAdmin(login, password string) error { return nil }
@@ -27,7 +28,9 @@ func (m *mockService) GetWorkSessionsForDate(date string) ([]app.WorkSession, er
 func (m *mockService) StartWorkSession() error           { return nil }
 func (m *mockService) EndWorkSession() error             { return nil }
 func (m *mockService) CheckIfAdminExists() (bool, error) { return false, nil }
-func (m *mockService) GetTodoTasks() ([]app.Task, error) { return nil, nil }
+func (m *mockService) GetTodoTasks() ([]app.Task, error) {
+	return m.todos, nil
+}
 
 func (m *mockService) GetDayTaskStats(year int) ([]app.DayTasksStat, error) {
 	return m.taskStats, nil

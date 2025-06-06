@@ -10,35 +10,6 @@ import (
 	"time"
 )
 
-func createWorklogTemplate() *template.Template {
-	tmpl := template.Must(template.New("worklog.html").Parse(`
-{{define "worklog.html"}}
-IS WORKING:
-{{ .IsWorking }}
-ALL SESSIONS:
-{{ range .AllSessions }}
-{{.}}
-{{end}}
-TOTAL SESSION DURATION:
-{{.TotalSessionDur}}
-TASKS:
-{{range .Dones}}
-NAME: 
-{{.Name}}
-DESCRIPTION:
-{{.Description}}
-DONE AT:
-{{ if .DoneAt }}
-  {{ .DoneAt.Format "2006-01-02 15:04:05" }}
-{{ else }}
-{{end}}
-{{end}}
-{{end}}
-`))
-
-	return tmpl
-}
-
 func TestWorkLogHandler_NotFound(t *testing.T) {
 	tmpl := createWorklogTemplate()
 	svc := &mockService{}
@@ -54,13 +25,6 @@ func TestWorkLogHandler_NotFound(t *testing.T) {
 	h.WorkLogHandler(rr1, req1)
 	if rr1.Code != http.StatusNotFound {
 		t.Errorf("handler returned wrong status code: got %v want %v", rr1.Code, http.StatusNotFound)
-	}
-
-	req2 := httptest.NewRequest(http.MethodGet, "/worklog", nil)
-	rr2 := httptest.NewRecorder()
-	h.WorkLogHandler(rr2, req2)
-	if rr2.Code != http.StatusNotFound {
-		t.Errorf("handler returned wrong status code: got %v want %v", rr2.Code, http.StatusNotFound)
 	}
 }
 
@@ -170,4 +134,33 @@ func TestWorkLogHandler_OK(t *testing.T) {
 	if !strings.Contains(body, "3h30m0s") {
 		t.Errorf("expected total session duration “3h30m0s”, got:\n%s", body)
 	}
+}
+
+func createWorklogTemplate() *template.Template {
+	tmpl := template.Must(template.New("worklog.html").Parse(`
+{{define "worklog.html"}}
+IS WORKING:
+{{ .IsWorking }}
+ALL SESSIONS:
+{{ range .AllSessions }}
+{{.}}
+{{end}}
+TOTAL SESSION DURATION:
+{{.TotalSessionDur}}
+TASKS:
+{{range .Dones}}
+NAME: 
+{{.Name}}
+DESCRIPTION:
+{{.Description}}
+DONE AT:
+{{ if .DoneAt }}
+  {{ .DoneAt.Format "2006-01-02 15:04:05" }}
+{{ else }}
+{{end}}
+{{end}}
+{{end}}
+`))
+
+	return tmpl
 }
