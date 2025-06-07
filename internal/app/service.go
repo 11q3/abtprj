@@ -2,7 +2,6 @@ package app
 
 import (
 	"abtprj/internal/repository"
-	"abtprj/internal/utils"
 	"database/sql"
 	"errors"
 	"golang.org/x/crypto/bcrypt"
@@ -29,11 +28,16 @@ type AppService interface {
 }
 
 type DefaultAppService struct {
-	DB *sql.DB
+	DB  *sql.DB
+	loc *time.Location
 }
 
 func NewDefaultAppService(db *sql.DB) *DefaultAppService {
-	return &DefaultAppService{DB: db}
+	loc, err := time.LoadLocation("Europe/Moscow")
+	if err != nil {
+		loc = time.UTC
+	}
+	return &DefaultAppService{DB: db, loc: loc}
 }
 
 type DayTasksStat struct {
@@ -53,19 +57,11 @@ type DaySessionsStat struct {
 }
 
 func (s *DefaultAppService) AddTask(name string, description string) error {
-	err := repository.AddTask(s.DB, name, description)
-	if err != nil {
-		return err
-	}
-	return nil
+	return repository.AddTask(s.DB, name, description)
 }
 
 func (s *DefaultAppService) CompleteTask(name string) error {
-	err := repository.CompleteTask(s.DB, name)
-	if err != nil {
-		return err
-	}
-	return nil
+	return repository.CompleteTask(s.DB, name)
 }
 
 func (s *DefaultAppService) LoginAdmin(login, password string) error {
@@ -80,27 +76,49 @@ func (s *DefaultAppService) LoginAdmin(login, password string) error {
 }
 
 func (s *DefaultAppService) GetTasksForDate(date string) ([]Task, error) {
-	start, end, err := utils.ParseDateRange(date)
+	day, err := time.ParseInLocation("2006-01-02", date, s.loc)
 	if err != nil {
 		return nil, err
 	}
-	repoTasks, err := repository.GetDoneTasks(s.DB, start, end)
+	startUTC := day.UTC()
+	endUTC := day.Add(24 * time.Hour).UTC()
+
+	repoTasks, err := repository.GetDoneTasks(s.DB, startUTC, endUTC)
 	if err != nil {
 		return nil, err
 	}
-	return ConvertRepoTasks(repoTasks), nil
+	tasks := ConvertRepoTasks(repoTasks)
+	for i := range tasks {
+		if tasks[i].DoneAt != nil {
+			t := tasks[i].DoneAt.In(s.loc)
+			tasks[i].DoneAt = &t
+		}
+	}
+	return tasks, nil
 }
 
 func (s *DefaultAppService) GetWorkSessionsForDate(date string) ([]WorkSession, error) {
-	start, end, err := utils.ParseDateRange(date)
+	day, err := time.ParseInLocation("2006-01-02", date, s.loc)
 	if err != nil {
 		return nil, err
 	}
-	repoSessions, err := repository.GetWorkingSessionsForDay(s.DB, start, end)
+	startUTC := day.UTC()
+	endUTC := day.Add(24 * time.Hour).UTC()
+
+	repoSessions, err := repository.GetWorkingSessionsForDay(s.DB, startUTC, endUTC)
 	if err != nil {
 		return nil, err
 	}
-	return ConvertRepoSessions(repoSessions), nil
+
+	sessions := ConvertRepoSessions(repoSessions)
+	for i := range sessions {
+		sessions[i].StartTime = sessions[i].StartTime.In(s.loc)
+		if sessions[i].EndTime != nil {
+			t2 := sessions[i].EndTime.In(s.loc)
+			sessions[i].EndTime = &t2
+		}
+	}
+	return sessions, nil
 }
 
 func (s *DefaultAppService) GetDayTaskStats(year int) ([]DayTasksStat, error) {
@@ -174,13 +192,10 @@ func (s *DefaultAppService) GetDaySessionStats(year int) ([]DaySessionsStat, err
 			stats[idx].Level = 4
 		case stats[idx].SessionDur > 4*time.Hour:
 			stats[idx].Level = 3
-
 		case stats[idx].SessionDur > 2*time.Hour:
 			stats[idx].Level = 2
-
-		case stats[idx].SessionDur > 1*time.Second:
+		case stats[idx].SessionDur > 0:
 			stats[idx].Level = 1
-
 		default:
 			stats[idx].Level = 0
 		}
@@ -193,8 +208,7 @@ func (s *DefaultAppService) GetDaySessionStats(year int) ([]DaySessionsStat, err
 }
 
 func (s *DefaultAppService) StartWorkSession() error {
-	err := repository.StartWorkSession(s.DB)
-	if err != nil {
+	if err := repository.StartWorkSession(s.DB); err != nil {
 		log.Printf("startWorkSession exec error: %v", err)
 		return err
 	}
@@ -210,8 +224,7 @@ func (s *DefaultAppService) IsWorking() (bool, error) {
 }
 
 func (s *DefaultAppService) EndWorkSession() error {
-	err := repository.EndWorkSession(s.DB)
-	if err != nil {
+	if err := repository.EndWorkSession(s.DB); err != nil {
 		log.Printf("endWorkSession exec error: %v", err)
 		return err
 	}
