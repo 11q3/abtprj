@@ -25,19 +25,22 @@
         <section class="working-window">
             <header class="window-header">Current Work Status</header>
             <div class="window-content">
-                Currently working: <strong><span id="working-indicator">{{.IsWorking}}</span></strong>
-            </div>
+                Currently working: <strong>
+                      <span id="working-indicator">
+        {{if .IsWorking}}YES{{else}}NO{{end}}
+      </span>
+            </strong></div>
         </section>
         <section class="session">
-        <div class="session-summary">
-            <header class="window-header">Today's work sessions: </header>
-            <ul id="session-list">
-                {{ range .AllSessions }}
-                <li>{{ . }}</li>
-                {{ end }}
-            </ul>
-            <strong>Total: </strong><span id="session-total">{{.TotalSessionDur}}</span>
-        </div>
+            <div class="session-summary">
+                <header class="window-header">Today's work sessions:</header>
+                <ul id="session-list">
+                    {{ range .AllSessions }}
+                    <li>{{ . }}</li>
+                    {{ end }}
+                </ul>
+                <strong>Total: </strong><span id="session-total">{{.TotalSessionDur}}</span>
+            </div>
         </section>
     </aside>
 
@@ -54,27 +57,26 @@
             {{ if .Dones }}
             {{ range .Dones }}
             <article class="day-log" data-date="{{ .DoneAt.Format `2006-01-02` }}">
-            <p>
-                <span class="task-name">{{ .Name }}</span> —
-                <span class="task-desc">{{ .Description }},</span>
-                DONE AT
-                <time
-                        datetime="{{ if .DoneAt }}{{ .DoneAt.Format `2006-01-02T15:04:05Z07:00` }}{{ end }}"
-                >
-                {{ if .DoneAt }}
-                {{ .DoneAt.Format "15:04:05" }}
-                {{ else }}
-                -
-                {{ end }}
-                </time>
-            </p>
+                <p>
+                    <span class="task-name">{{ .Name }}</span> —
+                    <span class="task-desc">{{ .Description }},</span>
+                    DONE AT
+                    <time
+                            datetime="{{ if .DoneAt }}{{ .DoneAt.Format `2006-01-02T15:04:05Z07:00` }}{{ end }}"
+                    >
+                        {{ if .DoneAt }}
+                        {{ .DoneAt.Format "15:04:05" }}
+                        {{ else }}
+                        -
+                        {{ end }}
+                    </time>
+                </p>
             </article>
             {{ end }}
             {{ else }}
             <p>No completed tasks for this date.</p>
             {{ end }}
         </section>
-
 
 
     </main>

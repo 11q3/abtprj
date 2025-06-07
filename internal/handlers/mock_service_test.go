@@ -18,6 +18,10 @@ func (m *mockService) LoginAdmin(login, password string) error { return nil }
 func (m *mockService) AddTask(name, description string) error  { return nil }
 func (m *mockService) CompleteTask(name string) error          { return nil }
 
+func (m *mockService) IsWorking() (bool, error) {
+	return m.isWorking, nil
+}
+
 func (m *mockService) GetTasksForDate(date string) ([]app.Task, error) {
 	return m.tasksForDate, nil
 }

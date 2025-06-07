@@ -67,7 +67,6 @@ func (h *Handler) renderAdminPage(w http.ResponseWriter) {
 
 	var currentSession string
 	var totalDur time.Duration
-	var isWorking bool
 
 	for _, sess := range sessions {
 		if sess.EndTime != nil {
@@ -76,13 +75,17 @@ func (h *Handler) renderAdminPage(w http.ResponseWriter) {
 	}
 
 	if len(sessions) > 0 && lastSession.EndTime == nil {
-		isWorking = true
 		now := time.Now().In(loc)
 		startFmt := lastSession.StartTime.In(loc).Format("15:04:05")
 		endFmt := now.Format("15:04:05")
 		ongoingDur := now.Sub(lastSession.StartTime.In(loc)).Truncate(time.Second)
 		currentSession = startFmt + " - " + endFmt + " (" + ongoingDur.String() + ")"
 		totalDur += ongoingDur
+	}
+
+	isWorking, err := h.AppService.IsWorking()
+	if err != nil {
+		log.Printf("worklog query error: %v", err)
 	}
 
 	data := AdminPageData{

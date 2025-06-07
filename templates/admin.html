@@ -47,8 +47,14 @@
 </div>
 
 <div class="window-content" style="margin: 20px;">
-    Currently working: <strong><span id="working-indicator">...</span></strong>
-    <button id="work-toggle-btn">...</button>
+    Currently working: <strong>
+      <span id="working-indicator">
+    {{if .IsWorking}}YES{{else}}NO{{end}}
+  </span>
+</strong>
+    <button id="work-toggle-btn">
+        {{if .IsWorking}}Stop Working{{else}}Start Working{{end}}
+    </button>
 </div>
 
 <script src="/static/admin.js"></script>

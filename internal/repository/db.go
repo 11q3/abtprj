@@ -59,7 +59,7 @@ func AddTask(db *sql.DB, name, description string) error {
 }
 
 func CompleteTask(db *sql.DB, name string) error {
-	isActive, session, err := checkIfActiveSessions(db)
+	isActive, session, err := CheckIfActiveSessions(db)
 	if !isActive || session == nil {
 		log.Printf("attempting to end a task without active session: %v", err)
 		return err
@@ -123,7 +123,7 @@ func GetWorkingSessions(db *sql.DB, start, end time.Time) ([]WorkSession, error)
 }
 
 func StartWorkSession(db *sql.DB) error {
-	isActive, _, err := checkIfActiveSessions(db)
+	isActive, _, err := CheckIfActiveSessions(db)
 	if isActive {
 		log.Printf("Attepmpting to create another worksession, while active sessions exist %v", err)
 		return err
@@ -138,7 +138,7 @@ func StartWorkSession(db *sql.DB) error {
 }
 
 func EndWorkSession(db *sql.DB) error {
-	isActive, s, err := checkIfActiveSessions(db)
+	isActive, s, err := CheckIfActiveSessions(db)
 	if !isActive {
 		log.Printf("Attepmpting to end worksession, while active sessions does not exist %v", err)
 		return err
@@ -152,7 +152,7 @@ func EndWorkSession(db *sql.DB) error {
 	return nil
 }
 
-func checkIfActiveSessions(db *sql.DB) (bool, *WorkSession, error) {
+func CheckIfActiveSessions(db *sql.DB) (bool, *WorkSession, error) {
 	row := db.QueryRow("SELECT id, start_time, end_time, created_at FROM work_sessions WHERE end_time IS NULL")
 
 	var ws WorkSession
@@ -216,7 +216,6 @@ func InitDefaultAdmin(db *sql.DB) error {
 		return err
 	}
 	if exists {
-		log.Println("Admin already exists")
 		return nil
 	}
 

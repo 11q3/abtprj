@@ -136,6 +136,127 @@ func TestWorkLogHandler_OK(t *testing.T) {
 	}
 }
 
+func TestWorkLogHandler_IsWorkingIndicator(t *testing.T) {
+	tmpl := createWorklogTemplate()
+
+	cases := []struct {
+		name      string
+		isWorking bool
+		want      string
+	}{
+		{"WorkingTrue", true, "IS WORKING:\ntrue"},
+		{"WorkingFalse", false, "IS WORKING:\nfalse"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			svc := &mockService{
+				isWorking:       tc.isWorking,
+				tasksForDate:    []app.Task{},
+				sessionsForDate: []app.WorkSession{},
+			}
+
+			h := &Handler{
+				Templates:  tmpl,
+				AppService: svc,
+			}
+
+			req := httptest.NewRequest(http.MethodGet, "/worklog/", nil)
+			rr := httptest.NewRecorder()
+
+			h.WorkLogHandler(rr, req)
+			if rr.Code != http.StatusOK {
+				t.Fatalf("status = %d; want %d", rr.Code, http.StatusOK)
+			}
+
+			body := rr.Body.String()
+			if !strings.Contains(body, tc.want) {
+				t.Errorf("body = %q; want to contain %q", body, tc.want)
+			}
+		})
+	}
+}
+
+func TestWorkLogHandler_OngoingSessionFormatting(t *testing.T) {
+	tmpl := createWorklogTemplate()
+
+	startUTC := time.Date(2025, 6, 8, 10, 0, 0, 0, time.UTC)
+	sessions := []app.WorkSession{
+		{StartTime: startUTC, EndTime: nil},
+	}
+
+	svc := &mockService{
+		isWorking:       true,
+		tasksForDate:    []app.Task{},
+		sessionsForDate: sessions,
+	}
+
+	h := &Handler{
+		Templates:  tmpl,
+		AppService: svc,
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/worklog/", nil)
+	rr := httptest.NewRecorder()
+
+	h.WorkLogHandler(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status = %d; want %d", rr.Code, http.StatusOK)
+	}
+
+	body := rr.Body.String()
+	want := "13:00:00 - (ongoing)"
+	if !strings.Contains(body, want) {
+		t.Errorf("body = %q; want to contain %q", body, want)
+	}
+}
+
+func TestWorkLogHandler_DisplayAllSessions(t *testing.T) {
+	tmpl := createWorklogTemplate()
+
+	// Two sessions on “today”: one completed, one ongoing.
+	// Use UTC times so we can predict Moscow (UTC+3) output.
+	start1 := time.Date(2025, time.June, 8, 9, 0, 0, 0, time.UTC)
+	end1 := time.Date(2025, time.June, 8, 11, 30, 0, 0, time.UTC)
+	start2 := time.Date(2025, time.June, 8, 13, 15, 0, 0, time.UTC)
+
+	sessions := []app.WorkSession{
+		{StartTime: start1, EndTime: &end1},
+		{StartTime: start2, EndTime: nil},
+	}
+
+	svc := &mockService{
+		sessionsForDate: sessions,
+	}
+
+	h := &Handler{
+		Templates:  tmpl,
+		AppService: svc,
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/worklog/", nil)
+	rr := httptest.NewRecorder()
+
+	h.WorkLogHandler(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status = %d; want %d", rr.Code, http.StatusOK)
+	}
+
+	body := rr.Body.String()
+
+	// 09:00 UTC → 12:00 Moscow; 11:30 UTC → 14:30 Moscow
+	want1 := "12:00:00 - 14:30:00 (2h30m0s)"
+	if !strings.Contains(body, want1) {
+		t.Errorf("body missing completed session %q:\n%s", want1, body)
+	}
+
+	// 13:15 UTC → 16:15 Moscow, ongoing
+	want2 := "16:15:00 - (ongoing)"
+	if !strings.Contains(body, want2) {
+		t.Errorf("body missing ongoing session %q:\n%s", want2, body)
+	}
+}
+
 func createWorklogTemplate() *template.Template {
 	tmpl := template.Must(template.New("worklog.html").Parse(`
 {{define "worklog.html"}}

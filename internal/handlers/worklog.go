@@ -72,6 +72,12 @@ func (h *Handler) renderWorklogPage(w http.ResponseWriter, r *http.Request) {
 		totalDur += currentSessionDuration
 	}
 
+	var isWorking bool
+	isWorking, err = h.AppService.IsWorking()
+	if err != nil {
+		log.Printf("worklog query error: %v", err)
+	}
+
 	var sessionStrings []string
 	for _, sess := range workSessions {
 		start := sess.StartTime.In(loc).Format("15:04:05")
@@ -94,7 +100,7 @@ func (h *Handler) renderWorklogPage(w http.ResponseWriter, r *http.Request) {
 		Dones:           dones,
 		CurrentSession:  currentSession,
 		TotalSessionDur: totalDur,
-		IsWorking:       len(workSessions) > 0 && lastSession.EndTime == nil,
+		IsWorking:       isWorking,
 		AllSessions:     sessionStrings,
 	}
 

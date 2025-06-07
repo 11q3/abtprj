@@ -19,6 +19,8 @@ type AppService interface {
 	StartWorkSession() error
 	EndWorkSession() error
 
+	IsWorking() (bool, error)
+
 	CheckIfAdminExists() (bool, error)
 	GetTodoTasks() ([]Task, error)
 
@@ -197,6 +199,14 @@ func (s *DefaultAppService) StartWorkSession() error {
 		return err
 	}
 	return nil
+}
+
+func (s *DefaultAppService) IsWorking() (bool, error) {
+	isWorking, _, err := repository.CheckIfActiveSessions(s.DB)
+	if err != nil {
+		return false, err
+	}
+	return isWorking, nil
 }
 
 func (s *DefaultAppService) EndWorkSession() error {

@@ -78,13 +78,54 @@ func TestAdminHandler_OK(t *testing.T) {
 	}
 }
 
+func TestAdminHandler_IsWorkingIndicator(t *testing.T) {
+	tmpl := createAdminTemplate()
+
+	cases := []struct {
+		name      string
+		isWorking bool
+		want      string
+	}{
+		{"WorkingTrue", true, "IS WORKING: YES"},
+		{"WorkingFalse", false, "IS WORKING: NO"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			svc := &mockService{
+				isWorking: tc.isWorking,
+				todos:     []app.Task{},
+			}
+
+			h := &Handler{
+				Templates:  tmpl,
+				AppService: svc,
+			}
+
+			req := httptest.NewRequest(http.MethodGet, "/admin/", nil)
+			rr := httptest.NewRecorder()
+
+			h.AdminHandler(rr, req)
+			if rr.Code != http.StatusOK {
+				t.Fatalf("status code = %d; want %d", rr.Code, http.StatusOK)
+			}
+
+			body := rr.Body.String()
+			if !strings.Contains(body, tc.want) {
+				t.Errorf("rendered body = %q; want to contain %q", body, tc.want)
+			}
+		})
+	}
+}
+
 func createAdminTemplate() *template.Template {
 	tmpl := template.Must(template.New("admin.html").Parse(`
 {{define "admin.html"}}
+IS WORKING: {{if .IsWorking}}YES{{else}}NO{{end}}
 {{range .Todos}}
-NAME:
+NAME: 
 {{.Name}}
-DESCRIPTION:
+DESC: 
 {{.Description}}
 {{end}}
 {{end}}
