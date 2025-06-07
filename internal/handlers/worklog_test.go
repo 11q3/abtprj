@@ -19,7 +19,7 @@ func TestWorkLogHandler_NotFound(t *testing.T) {
 		AppService: svc,
 	}
 
-	req1 := httptest.NewRequest(http.MethodGet, "/worklog", nil)
+	req1 := httptest.NewRequest(http.MethodGet, "/worklog?date=2025-06-08", nil)
 	rr1 := httptest.NewRecorder()
 
 	h.WorkLogHandler(rr1, req1)
@@ -110,7 +110,7 @@ func TestWorkLogHandler_OK(t *testing.T) {
 		AppService: svc,
 	}
 
-	req1 := httptest.NewRequest(http.MethodGet, "/worklog/", nil)
+	req1 := httptest.NewRequest(http.MethodGet, "/worklog/?date=2025-06-08", nil)
 	rr1 := httptest.NewRecorder()
 
 	h.WorkLogHandler(rr1, req1)
@@ -161,7 +161,7 @@ func TestWorkLogHandler_IsWorkingIndicator(t *testing.T) {
 				AppService: svc,
 			}
 
-			req := httptest.NewRequest(http.MethodGet, "/worklog/", nil)
+			req := httptest.NewRequest(http.MethodGet, "/worklog/?date=2025-06-08", nil)
 			rr := httptest.NewRecorder()
 
 			h.WorkLogHandler(rr, req)
@@ -196,7 +196,7 @@ func TestWorkLogHandler_OngoingSessionFormatting(t *testing.T) {
 		AppService: svc,
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/worklog/", nil)
+	req := httptest.NewRequest(http.MethodGet, "/worklog/?date=2025-06-08", nil)
 	rr := httptest.NewRecorder()
 
 	h.WorkLogHandler(rr, req)
@@ -214,8 +214,6 @@ func TestWorkLogHandler_OngoingSessionFormatting(t *testing.T) {
 func TestWorkLogHandler_DisplayAllSessions(t *testing.T) {
 	tmpl := createWorklogTemplate()
 
-	// Two sessions on “today”: one completed, one ongoing.
-	// Use UTC times so we can predict Moscow (UTC+3) output.
 	start1 := time.Date(2025, time.June, 8, 9, 0, 0, 0, time.UTC)
 	end1 := time.Date(2025, time.June, 8, 11, 30, 0, 0, time.UTC)
 	start2 := time.Date(2025, time.June, 8, 13, 15, 0, 0, time.UTC)
@@ -234,7 +232,7 @@ func TestWorkLogHandler_DisplayAllSessions(t *testing.T) {
 		AppService: svc,
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/worklog/", nil)
+	req := httptest.NewRequest(http.MethodGet, "/worklog/?date=2025-06-08", nil)
 	rr := httptest.NewRecorder()
 
 	h.WorkLogHandler(rr, req)

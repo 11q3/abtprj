@@ -30,6 +30,15 @@ func (h *Handler) renderWorklogPage(w http.ResponseWriter, r *http.Request) {
 		date = time.Now().Format("2006-01-02")
 	}
 
+	raw := r.URL.Query().Get("date")
+	if raw == "" {
+		today := time.Now().Format("2006-01-02")
+		// redirect to /worklog/?date=YYYY-MM-DD
+		http.Redirect(w, r, "/worklog/?date="+today, http.StatusSeeOther)
+		return
+	}
+	date = raw
+
 	dones, err := h.AppService.GetTasksForDate(date)
 	if err != nil {
 		log.Printf("worklog query error: %v", err)
