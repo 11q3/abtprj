@@ -268,7 +268,7 @@ func GetGoals(db *sql.DB) ([]Goal, error) {
 }
 
 func GetTodoGoals(db *sql.DB) ([]Goal, error) {
-	rows, err := db.Query("SELECT id, name, description, status FROM goals WHERE status = 'todo'")
+	rows, err := db.Query("SELECT id, name, description, status, done_at, due_at FROM goals WHERE status = 'todo'")
 	if err != nil {
 		log.Printf("Error getting todo goals: %v", err)
 		return nil, err

@@ -50,10 +50,29 @@
         </section>
 
         <section class="admin-window">
+            <header class="window-header">Current Goals</header>
+            <div class="window-content">
+                <ul>
+                    {{range .TodoGoals}}
+                    <li style="margin-bottom: 10px;">
+                        <strong>{{.Name}}</strong> — {{.Description}}
+                        <form class="complete-form" action="/admin/complete-goal" method="POST" style="display:inline;">
+                            <input type="hidden" name="id" value="{{.ID}}">
+                            <button type="submit">Mark as Done</button>
+                        </form>
+                    </li>
+                    {{else}}
+                    <li>No goals yet.</li>
+                    {{end}}
+                </ul>
+            </div>
+        </section>
+
+        <section class="admin-window">
             <header class="window-header">Current Tasks</header>
             <div class="window-content">
                 <ul>
-                    {{range .Todos}}
+                    {{range .TodoTasks}}
                     <li style="margin-bottom: 10px;">
                         <strong>{{.Name}}</strong> — {{.Description}}
                         <form class="complete-form" action="/admin/complete-task" method="POST" style="display:inline;">

@@ -10,7 +10,8 @@ import (
 )
 
 type AdminPageData struct {
-	Todos           []app.Task
+	TodoTasks       []app.Task
+	TodoGoals       []app.Goal
 	CurrentSession  string
 	TotalSessionDur time.Duration
 	IsWorking       bool
@@ -26,7 +27,7 @@ func (h *Handler) AdminHandler(w http.ResponseWriter, r *http.Request) {
 		h.completeTask(w, r)
 	case r.Method == http.MethodPost && r.URL.Path == "/admin/create-goal":
 		h.createGoal(w, r)
-	case r.Method == http.MethodGet && r.URL.Path == "/admin/complete-goal":
+	case r.Method == http.MethodPost && r.URL.Path == "/admin/complete-goal":
 		h.completeGoal(w, r)
 	case r.Method == http.MethodGet && r.URL.Path == "/admin/get-work-status":
 		h.getWorkingStatusForToday(w, r)
@@ -43,10 +44,17 @@ func (h *Handler) AdminHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) renderAdminPage(w http.ResponseWriter) {
-	todos, err := h.AppService.GetTodoTasks()
+	todoTasks, err := h.AppService.GetTodoTasks()
 
 	if err != nil {
 		log.Printf("get tasks query error: %v", err)
+		http.Error(w, "repository error", http.StatusInternalServerError)
+		return
+	}
+
+	goals, err := h.AppService.GetTodoGoals()
+	if err != nil {
+		log.Printf("get goals query error: %v", err)
 		http.Error(w, "repository error", http.StatusInternalServerError)
 		return
 	}
@@ -93,7 +101,8 @@ func (h *Handler) renderAdminPage(w http.ResponseWriter) {
 	}
 
 	data := AdminPageData{
-		Todos:           todos,
+		TodoTasks:       todoTasks,
+		TodoGoals:       goals,
 		CurrentSession:  currentSession,
 		TotalSessionDur: totalDur.Truncate(time.Second),
 		IsWorking:       isWorking,
@@ -176,14 +185,21 @@ func (h *Handler) completeGoal(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "incorrect form values", http.StatusBadRequest)
 		return
 	}
-	id := r.FormValue("id")
-	if id == "" {
+
+	idStr := r.FormValue("id")
+	if idStr == "" {
 		http.Error(w, "goal id is not present", http.StatusBadRequest)
 		return
 	}
-	if err := h.AppService.CompleteTask(id); err != nil {
-		log.Printf("completeTask CompleteTask error: %v", err)
-		http.Error(w, "failed to complete a task", http.StatusInternalServerError)
+	goalID, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "invalid goal id", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.AppService.CompleteGoal(goalID); err != nil {
+		log.Printf("completeGoal CompleteGoal error: %v", err)
+		http.Error(w, "failed to complete a goal", http.StatusInternalServerError)
 		return
 	}
 	http.Redirect(w, r, "/admin/", http.StatusSeeOther)

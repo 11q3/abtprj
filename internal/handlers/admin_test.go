@@ -122,7 +122,7 @@ func createAdminTemplate() *template.Template {
 	tmpl := template.Must(template.New("admin.html").Parse(`
 {{define "admin.html"}}
 IS WORKING: {{if .IsWorking}}YES{{else}}NO{{end}}
-{{range .Todos}}
+{{range .TodoTasks}}
 NAME: 
 {{.Name}}
 DESC: 
