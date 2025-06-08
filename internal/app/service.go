@@ -18,6 +18,7 @@ type AppService interface {
 	StartWorkSession() error
 	EndWorkSession() error
 	GetGoals() ([]Goal, error)
+	CreateGoal(goal Goal) error
 
 	IsWorking() (bool, error)
 
@@ -163,10 +164,10 @@ func (s *DefaultAppService) GetDayTaskStats(year int) ([]DayTasksStat, error) {
 		return nil, err
 	}
 	for _, goal := range goals {
-		if goal.DueAt == nil || !goal.DueAt.Valid {
+		if goal.DueAt == nil {
 			continue
 		}
-		d := goal.DueAt.Time
+		d := goal.DueAt
 		_, isoWeek := d.ISOWeek()
 		weekIdx := isoWeek - 1
 		dowIdx := (int(d.Weekday()) + 6) % 7
@@ -281,6 +282,14 @@ func (s *DefaultAppService) GetGoals() ([]Goal, error) {
 		return nil, err
 	}
 	return ConvertRepoGoals(goals), err
+}
+
+func (s *DefaultAppService) CreateGoal(goal Goal) error {
+	err := repository.CreateGoal(s.DB, goal.Name, goal.Description, *goal.DueAt)
+	if err != nil {
+		log.Printf("CreateGoal exec error: %v", err)
+	}
+	return nil
 }
 
 func generateEmptyDayStats() []DayTasksStat {

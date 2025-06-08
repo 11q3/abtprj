@@ -265,26 +265,13 @@ func GetGoals(db *sql.DB) ([]Goal, error) {
 	}
 
 	return goals, rows.Err()
+}
 
-	/*rows, err := db.Query(
-		`SELECT start_time, end_time
-		   FROM work_sessions
-		  WHERE start_time >= $1
-		    AND (end_time < $2 OR end_time IS NULL)`,
-		start, end,
-	)
+func CreateGoal(db *sql.DB, name string, description string, dueAt time.Time) error {
+	_, err := db.Exec("INSERT INTO goals (name, description, due_at) VALUES ($1, $2, $3)", name, description, dueAt)
 	if err != nil {
-		return nil, err
+		log.Printf("Error inserting goal: %v", err)
+		return err
 	}
-	defer rows.Close()
-
-	var workSessions []WorkSession
-	for rows.Next() {
-		var ws WorkSession
-		if err := rows.Scan(&ws.StartTime, &ws.EndTime); err != nil {
-			continue
-		}
-		workSessions = append(workSessions, ws)
-	}
-	return workSessions, rows.Err()*/
+	return nil
 }

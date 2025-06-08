@@ -24,5 +24,5 @@ type Goal struct {
 	Description string
 	Status      string
 	DoneAt      *sql.NullTime
-	DueAt       *sql.NullTime
+	DueAt       *time.Time
 }

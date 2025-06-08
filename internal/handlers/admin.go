@@ -185,7 +185,6 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.AppService.LoginAdmin(login, password); err != nil {
 		log.Printf("handleLogin LoginAdmin error: %v", err)
-		// Этот ответ можно настроить под ваши шаблоны: возвращаем страницу с ошибкой
 		h.Templates.ExecuteTemplate(w, "login.html", map[string]string{
 			"Error": "Incorrect login or password",
 		})
