@@ -4,6 +4,7 @@ import (
 	"abtprj/internal/handlers"
 	"abtprj/internal/repository"
 	"database/sql"
+	"encoding/json"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -25,7 +26,13 @@ func main() {
 		log.Fatalf("InitDefaultAdmin error: %v", err)
 	}
 
-	templates, err := template.ParseGlob(filepath.Join("templates", "*.html"))
+	funcMap := template.FuncMap{
+		"json": func(v interface{}) string {
+			b, _ := json.Marshal(v)
+			return string(b)
+		},
+	}
+	templates, err := template.New("").Funcs(funcMap).ParseGlob(filepath.Join("templates", "*.html"))
 	if err != nil {
 		log.Fatalf("failed to parse templates: %v", err)
 	}

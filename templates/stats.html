@@ -1,167 +1,210 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>11q2’s Stats</title>
-  <link rel="stylesheet" href="/static/style.css">
-  <style>
-    .contrib-graph {
-      display: grid;
-      grid-template-columns: 40px repeat(53, 12px);
-      grid-template-rows: auto repeat(7, 12px);
-      grid-column-gap: 4px;
-      grid-row-gap: 4px;
-      padding: 8px;
-    }
-    .contrib-graph .month-label {
-      grid-row: 1;
-      font-size: 0.75em;
-      color: var(--text-secondary);
-    }
-    .contrib-graph .weekday-label {
-      grid-column: 1;
-      font-size: 0.75em;
-      color: var(--text-secondary);
-      text-align: right;
-      padding-right: 6px;
-    }
-    .contrib-graph .day {
-      width: 12px; height: 12px;
-      border-radius: 2px;
-      background-color: var(--color-level-0);
-    }
-    .contrib-graph .day.level-1 { background-color: var(--color-level-1); }
-    .contrib-graph .day.level-2 { background-color: var(--color-level-2); }
-    .contrib-graph .day.level-3 { background-color: var(--color-level-3); }
-    .contrib-graph .day.level-4 { background-color: var(--color-level-4); }
-    .contrib-legend {
-      display: flex; align-items: center;
-      font-size: 0.75em;
-      margin-top: 6px;
-      color: var(--text-secondary);
-    }
-    .contrib-legend .box {
-      width:12px; height:12px;
-      margin:0 4px;
-      border-radius:2px;
-      background-color: var(--color-level-0);
-    }
-    .contrib-legend .box.level-1 { background-color: var(--color-level-1); }
-    .contrib-legend .box.level-2 { background-color: var(--color-level-2); }
-    .contrib-legend .box.level-3 { background-color: var(--color-level-3); }
-    .contrib-legend .box.level-4 { background-color: var(--color-level-4); }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>11q2’s Stats</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .contrib-graph {
+            display: grid;
+            grid-template-columns: 40px repeat(53, 12px);
+            grid-template-rows: auto repeat(7, 12px);
+            grid-column-gap: 4px;
+            grid-row-gap: 4px;
+            padding: 8px;
+        }
+
+        .contrib-graph .month-label {
+            grid-row: 1;
+            font-size: 0.75em;
+            color: var(--text-secondary);
+        }
+
+        .contrib-graph .weekday-label {
+            grid-column: 1;
+            font-size: 0.75em;
+            color: var(--text-secondary);
+            text-align: right;
+            padding-right: 6px;
+        }
+
+        .contrib-graph .day {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            background-color: var(--color-level-0);
+        }
+
+        .contrib-graph .day.level-1 {
+            background-color: var(--color-level-1);
+        }
+
+        .contrib-graph .day.level-2 {
+            background-color: var(--color-level-2);
+        }
+
+        .contrib-graph .day.level-3 {
+            background-color: var(--color-level-3);
+        }
+
+        .contrib-graph .day.level-4 {
+            background-color: var(--color-level-4);
+        }
+
+        .contrib-legend {
+            display: flex;
+            align-items: center;
+            font-size: 0.75em;
+            margin-top: 6px;
+            color: var(--text-secondary);
+        }
+
+        .contrib-legend .box {
+            width: 12px;
+            height: 12px;
+            margin: 0 4px;
+            border-radius: 2px;
+            background-color: var(--color-level-0);
+        }
+
+        .contrib-legend .box.level-1 {
+            background-color: var(--color-level-1);
+        }
+
+        .contrib-legend .box.level-2 {
+            background-color: var(--color-level-2);
+        }
+
+        .contrib-legend .box.level-3 {
+            background-color: var(--color-level-3);
+        }
+
+        .contrib-legend .box.level-4 {
+            background-color: var(--color-level-4);
+        }
+    </style>
 </head>
 <body>
 <header class="header">
-  <h1>11q2</h1>
-  <nav class="nav" aria-label="Main navigation">
-    <ul>
-      <li><a href="/">Dashboard</a></li>
-      <li><a href="/worklog/">Tasks</a></li>
-      <li><a href="/stats">Stats</a></li>
-      <li><a href="#">Settings</a></li>
-    </ul>
-  </nav>
+    <h1>11q2</h1>
+    <nav class="nav" aria-label="Main navigation">
+        <ul>
+            <li><a href="/">Dashboard</a></li>
+            <li><a href="/worklog/">Tasks</a></li>
+            <li><a href="/stats">Stats</a></li>
+            <li><a href="#">Settings</a></li>
+        </ul>
+    </nav>
 </header>
 
 <div class="main-container">
-  <main class="stats">
+    <main class="stats">
 
-    <!-- TASKS GRAPH -->
-    <section class="stats-window">
-      <header class="window-header">Tasks per Day</header>
-      <div class="window-content">
-        <div class="contrib-graph">
+        <!-- TASKS GRAPH -->
+        <section class="stats-window">
+            <header class="window-header">Tasks, Goals per Day</header>
+            <div class="window-content">
+                <div class="contrib-graph">
 
-          <!-- hard-coded month labels -->
-          <div class="month-label" style="grid-column:2">Jan</div>
-          <div class="month-label" style="grid-column:6">Feb</div>
-          <div class="month-label" style="grid-column:10">Mar</div>
-          <div class="month-label" style="grid-column:15">Apr</div>
-          <div class="month-label" style="grid-column:19">May</div>
-          <div class="month-label" style="grid-column:24">Jun</div>
-          <div class="month-label" style="grid-column:28">Jul</div>
-          <div class="month-label" style="grid-column:32">Aug</div>
-          <div class="month-label" style="grid-column:37">Sep</div>
-          <div class="month-label" style="grid-column:41">Oct</div>
-          <div class="month-label" style="grid-column:46">Nov</div>
-          <div class="month-label" style="grid-column:50">Dec</div>
+                    <!-- hard-coded month labels -->
+                    <div class="month-label" style="grid-column:2">Jan</div>
+                    <div class="month-label" style="grid-column:6">Feb</div>
+                    <div class="month-label" style="grid-column:10">Mar</div>
+                    <div class="month-label" style="grid-column:15">Apr</div>
+                    <div class="month-label" style="grid-column:19">May</div>
+                    <div class="month-label" style="grid-column:24">Jun</div>
+                    <div class="month-label" style="grid-column:28">Jul</div>
+                    <div class="month-label" style="grid-column:32">Aug</div>
+                    <div class="month-label" style="grid-column:37">Sep</div>
+                    <div class="month-label" style="grid-column:41">Oct</div>
+                    <div class="month-label" style="grid-column:46">Nov</div>
+                    <div class="month-label" style="grid-column:50">Dec</div>
 
-          <!-- weekday labels -->
-          <div class="weekday-label" style="grid-row:3">Mon</div>
-          <div class="weekday-label" style="grid-row:5">Wed</div>
-          <div class="weekday-label" style="grid-row:7">Fri</div>
+                    <!-- weekday labels -->
+                    <div class="weekday-label" style="grid-row:3">Mon</div>
+                    <div class="weekday-label" style="grid-row:5">Wed</div>
+                    <div class="weekday-label" style="grid-row:7">Fri</div>
 
-          <!-- your Go‐driven day cells -->
-          {{ range .TaskContributions }}
-          <div class="day level-{{ .Level }}"
-               style="grid-column: {{ .Col }}; grid-row: {{ .Row }};"
-               data-date="{{ .Date }}"
-               data-count="{{ .Count }}"
-               title="{{ .Count }} tasks on {{ .Date }}">
-          </div>
-          {{ end }}
-        </div>
+                    <!-- your Go‐driven day cells -->
+                    {{ range .TaskContributions }}
+                    <div class="day level-{{ .Level }}"
+                         style="grid-column: {{ .Col }}; grid-row: {{ .Row }};"
+                         data-date="{{ .Date }}"
+                         data-count="{{ .Count }}"
+                         title="{{ .Count }} tasks on {{ .Date }}">
+                        {{ if .Goals }}<span class="goal-marker">🎯</span>{{ end }}
+                        {{ range .Goals }}
+                        <span class="goal-data"
+                              data-name="{{ .Name }}"
+                              data-desc="{{ .Description }}"
+                              data-status="{{ .Status }}"
+                              data-done="{{ if and .DoneAt .DoneAt.Valid }}{{ .DoneAt.Time.Format `2006-01-02` }}{{ end }}"
+                              data-due="{{ if and .DueAt .DueAt.Valid }}{{ .DueAt.Time.Format `2006-01-02` }}{{ end }}"></span>
+                        {{ end }}
+                    </div>
+                    {{ end }}
+                </div>
 
-        <div class="contrib-legend">
-          <span>Less</span>
-          <div class="box level-0"></div>
-          <div class="box level-1"></div>
-          <div class="box level-2"></div>
-          <div class="box level-3"></div>
-          <div class="box level-4"></div>
-          <span>More</span>
-        </div>
-      </div>
-    </section>
+                <div class="contrib-legend">
+                    <span>Less</span>
+                    <div class="box level-0"></div>
+                    <div class="box level-1"></div>
+                    <div class="box level-2"></div>
+                    <div class="box level-3"></div>
+                    <div class="box level-4"></div>
+                    <span>More</span>
+                </div>
+            </div>
+        </section>
 
-    <!-- SESSIONS GRAPH (same months & weekdays) -->
-    <section class="stats-window">
-      <header class="window-header">Work Sessions per Day</header>
-      <div class="window-content">
-        <div class="contrib-graph">
-          <div class="month-label" style="grid-column:2">Jan</div>
-          <div class="month-label" style="grid-column:6">Feb</div>
-          <div class="month-label" style="grid-column:10">Mar</div>
-          <div class="month-label" style="grid-column:15">Apr</div>
-          <div class="month-label" style="grid-column:19">May</div>
-          <div class="month-label" style="grid-column:24">Jun</div>
-          <div class="month-label" style="grid-column:28">Jul</div>
-          <div class="month-label" style="grid-column:32">Aug</div>
-          <div class="month-label" style="grid-column:37">Sep</div>
-          <div class="month-label" style="grid-column:41">Oct</div>
-          <div class="month-label" style="grid-column:46">Nov</div>
-          <div class="month-label" style="grid-column:50">Dec</div>
+        <!-- SESSIONS GRAPH (same months & weekdays) -->
+        <section class="stats-window">
+            <header class="window-header">Work Sessions per Day</header>
+            <div class="window-content">
+                <div class="contrib-graph">
+                    <div class="month-label" style="grid-column:2">Jan</div>
+                    <div class="month-label" style="grid-column:6">Feb</div>
+                    <div class="month-label" style="grid-column:10">Mar</div>
+                    <div class="month-label" style="grid-column:15">Apr</div>
+                    <div class="month-label" style="grid-column:19">May</div>
+                    <div class="month-label" style="grid-column:24">Jun</div>
+                    <div class="month-label" style="grid-column:28">Jul</div>
+                    <div class="month-label" style="grid-column:32">Aug</div>
+                    <div class="month-label" style="grid-column:37">Sep</div>
+                    <div class="month-label" style="grid-column:41">Oct</div>
+                    <div class="month-label" style="grid-column:46">Nov</div>
+                    <div class="month-label" style="grid-column:50">Dec</div>
 
-          <div class="weekday-label" style="grid-row:3">Mon</div>
-          <div class="weekday-label" style="grid-row:5">Wed</div>
-          <div class="weekday-label" style="grid-row:7">Fri</div>
+                    <div class="weekday-label" style="grid-row:3">Mon</div>
+                    <div class="weekday-label" style="grid-row:5">Wed</div>
+                    <div class="weekday-label" style="grid-row:7">Fri</div>
 
-          {{ range .SessionContributions }}
-          <div class="day level-{{ .Level }}"
-               style="grid-column: {{ .Col }}; grid-row: {{ .Row }};"
-               data-date="{{ .Date }}"
-               data-count="{{ .SessionDur }}"
-               title="{{ .SessionDur }} session duration on {{ .Date }}">
-          </div>
-          {{ end }}
-        </div>
+                    {{ range .SessionContributions }}
+                    <div class="day level-{{ .Level }}"
+                         style="grid-column: {{ .Col }}; grid-row: {{ .Row }};"
+                         data-date="{{ .Date }}"
+                         data-count="{{ .SessionDur }}"
+                         title="{{ .SessionDur }} session duration on {{ .Date }}">
+                    </div>
+                    {{ end }}
+                </div>
 
-        <div class="contrib-legend">
-          <span>Less</span>
-          <div class="box level-0"></div>
-          <div class="box level-1"></div>
-          <div class="box level-2"></div>
-          <div class="box level-3"></div>
-          <div class="box level-4"></div>
-          <span>More</span>
-        </div>
-      </div>
-    </section>
+                <div class="contrib-legend">
+                    <span>Less</span>
+                    <div class="box level-0"></div>
+                    <div class="box level-1"></div>
+                    <div class="box level-2"></div>
+                    <div class="box level-3"></div>
+                    <div class="box level-4"></div>
+                    <span>More</span>
+                </div>
+            </div>
+        </section>
 
-  </main>
+    </main>
 </div>
+<div id="goal-details" class="goal-details-window" style="display:none;"></div>
+<script src="/static/stats.js"></script>
 </body>
 </html>

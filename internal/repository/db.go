@@ -241,7 +241,7 @@ func GenerateAdmin(db *sql.DB, login string, hash []byte) error {
 }
 
 func GetGoals(db *sql.DB) ([]Goal, error) {
-	rows, err := db.Query("SELECT id, name, description, status, done_at, created_at, due_at FROM goals")
+	rows, err := db.Query("SELECT id, name, description, status, done_at, due_at FROM goals")
 	if err != nil {
 		log.Printf("Error getting goals: %v", err)
 		return nil, err

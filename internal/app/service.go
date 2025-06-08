@@ -163,15 +163,18 @@ func (s *DefaultAppService) GetDayTaskStats(year int) ([]DayTasksStat, error) {
 		return nil, err
 	}
 	for _, goal := range goals {
-		d := goal.DueAt
-		_, isoWeek := d.Time.ISOWeek()
+		if goal.DueAt == nil || !goal.DueAt.Valid {
+			continue
+		}
+		d := goal.DueAt.Time
+		_, isoWeek := d.ISOWeek()
 		weekIdx := isoWeek - 1
-		dowIdx := (int(d.Time.Weekday()) + 6) % 7
+		dowIdx := (int(d.Weekday()) + 6) % 7
 		idx := weekIdx*7 + dowIdx
 		if idx < 0 || idx >= len(stats) {
 			continue
 		}
-		stats[idx].Date = d.Time.Format("2006-01-02")
+		stats[idx].Date = d.Format("2006-01-02")
 		stats[idx].Goals = append(stats[idx].Goals, goal)
 	}
 	return stats, nil

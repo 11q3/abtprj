@@ -167,6 +167,10 @@ a:hover {
     cursor: pointer;
 }
 
+.contrib-graph .day .goal-marker {
+    cursor: pointer;
+}
+
 .date-window .window-content {
     pointer-events: none;
 }
@@ -311,3 +315,31 @@ input[type="date"]::-moz-calendar-picker-indicator {
     cursor: pointer;
 }
 
+.contrib-graph .day {
+    position: relative;
+}
+
+.goal-marker {
+    position: absolute;
+    top: -17px;
+    left: 2px;
+    font-size: 10px;
+    line-height: 1;
+}
+
+.goal-details-window {
+    position: absolute;
+    background-color: var(--bg-secondary);
+    border: var(--border-width) solid var(--border-color);
+    padding: var(--space-sm);
+    border-radius: var(--border-radius);
+    color: var(--text-secondary);
+    max-width: 200px;
+    z-index: 100;
+}
+
+.goal-entry + .goal-entry {
+    border-top: 1px solid var(--border-color);
+    margin-top: var(--space-xs);
+    padding-top: var(--space-xs);
+}
