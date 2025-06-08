@@ -49,7 +49,7 @@ func ConvertRepoGoals(repoGoals []repository.Goal) []Goal {
 			Description: goal.Description,
 			Status:      goal.Status,
 			DoneAt:      &goal.DoneAt,
-			DueAt:       &goal.DueAt,
+			DueAt:       &goal.DueAt.Time,
 		}
 	}
 	return out

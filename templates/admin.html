@@ -6,55 +6,77 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-<div class="header">
-    <h1>Admin 11q2</h1>
-</div>
+<header class="header">
+    <h1>11q2</h1>
+    <nav class="nav" aria-label="Main navigation">
+        <ul>
+            <li><a href="/">Dashboard</a></li>
+            <li><a href="/worklog/">Tasks</a></li>
+            <li><a href="/stats">Stats</a></li>
+            <li><a href="#">Settings</a></li>
+        </ul>
+    </nav>
+</header>
 
-<div class="main-container" style="padding: 20px;">
-    <h2>New Task</h2>
 
-    <form action="/admin/add-task" method="POST">
-        <div>
-            <label for="name">Task Name:</label><br>
-            <input type="text" id="name" name="name" required style="width: 300px;">
-        </div>
-        <div style="margin-top: 10px;">
-            <label for="description">Description:</label><br>
-            <textarea id="description" name="description" rows="4" style="width: 300px;"></textarea>
-        </div>
-        <div style="margin-top: 10px;">
-            <button type="submit">Add Task</button>
-        </div>
-    </form>
+<div class="main-container">
+    <main class="admin">
+        <section class="admin-window">
+            <header class="window-header">New Task</header>
+            <div class="window-content">
+                <form action="/admin/add-task" method="POST">
+                    <label for="name">Task Name:</label><br>
+                    <input type="text" id="name" name="name" required style="width: 300px;"><br>
+                    <label for="description" style="margin-top:10px;">Description:</label><br>
+                    <textarea id="description" name="description" rows="4" style="width: 300px;"></textarea><br>
+                    <button type="submit" style="margin-top:10px;">Add Task</button>
+                </form>
+            </div>
+        </section>
 
-    <hr style="margin: 40px 0;">
+        <section class="admin-window">
+            <header class="window-header">New Goal</header>
+            <div class="window-content">
+                <form action="/admin/create-goal" method="POST">
+                    <label for="goal_name">Goal Name:</label><br>
+                    <input type="text" id="goal_name" name="goal_name" required style="width: 300px;"><br>
+                    <label for="goal_description" style="margin-top:10px;">Description:</label><br>
+                    <textarea id="goal_description" name="goal_description" rows="4" style="width: 300px;"></textarea><br>
+                    <label for="goal_due" style="margin-top:10px;">Due Date:</label><br>
+                    <input type="date" id="goal_due" name="goal_due" required style="width: 160px;"><br>
+                    <button type="submit" style="margin-top:10px;">Create Goal</button>
+                </form>
+            </div>
+        </section>
 
-    <h2>Current Tasks</h2>
+        <section class="admin-window">
+            <header class="window-header">Current Tasks</header>
+            <div class="window-content">
+                <ul>
+                    {{range .Todos}}
+                    <li style="margin-bottom: 10px;">
+                        <strong>{{.Name}}</strong> — {{.Description}}
+                        <form class="complete-form" action="/admin/complete-task" method="POST" style="display:inline;">
+                            <input type="hidden" name="name" value="{{.Name}}">
+                            <button type="submit">Mark as Done</button>
+                        </form>
+                    </li>
+                    {{else}}
+                    <li>No tasks yet.</li>
+                    {{end}}
+                </ul>
+            </div>
+        </section>
 
-    <ul>
-        {{range .Todos}}
-        <li style="margin-bottom: 10px;">
-            <strong>{{.Name}}</strong> — {{.Description}}
-            <form class="complete-form" action="/admin/complete-task" method="POST" style="display:inline;">
-                <input type="hidden" name="name" value="{{.Name}}">
-                <button type="submit">Mark as Done</button>
-            </form>
-        </li>
-        {{else}}
-        <li>No tasks yet.</li>
-        {{end}}
-    </ul>
-</div>
 
-<div class="window-content" style="margin: 20px;">
-    Currently working: <strong>
-      <span id="working-indicator">
-    {{if .IsWorking}}YES{{else}}NO{{end}}
-  </span>
-</strong>
-    <button id="work-toggle-btn">
-        {{if .IsWorking}}Stop Working{{else}}Start Working{{end}}
-    </button>
+        <section class="admin-window">
+            <header class="window-header">Work Status</header>
+            <div class="window-content">
+                Currently working: <strong><span id="working-indicator">{{if .IsWorking}}YES{{else}}NO{{end}}</span></strong>
+                <button id="work-toggle-btn">{{if .IsWorking}}Stop Working{{else}}Start Working{{end}}</button>
+            </div>
+        </section>
+    </main>
 </div>
 
 <script src="/static/admin.js"></script>

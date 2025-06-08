@@ -114,7 +114,8 @@ a:hover {
 .date-window,
 .working-window,
 .day-log,
-.session {
+.session,
+.admin-window { {
     background-color: var(--bg-secondary);
     border: var(--border-width) solid var(--border-color);
     border-radius: var(--border-radius);

@@ -139,8 +139,8 @@
                               data-name="{{ .Name }}"
                               data-desc="{{ .Description }}"
                               data-status="{{ .Status }}"
-                              data-done="{{ if and .DoneAt .DoneAt.Valid }}{{ .DoneAt.Time.Format `2006-01-02` }}{{ end }}"
-                              data-due="{{ if and .DueAt .DueAt.Valid }}{{ .DueAt.Time.Format `2006-01-02` }}{{ end }}"></span>
+                              data-done="{{ if and .DoneAt .DoneAt }}{{ .DoneAt.Time.Format `2006-01-02` }}{{ end }}"
+                              data-due="{{ if and .DueAt .DueAt }}{{ .DueAt.Format `2006-01-02` }}{{ end }}"></span>
                         {{ end }}
                     </div>
                     {{ end }}

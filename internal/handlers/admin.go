@@ -24,6 +24,8 @@ func (h *Handler) AdminHandler(w http.ResponseWriter, r *http.Request) {
 		h.addTask(w, r)
 	case r.Method == http.MethodPost && r.URL.Path == "/admin/complete-task":
 		h.completeTask(w, r)
+	case r.Method == http.MethodPost && r.URL.Path == "/admin/create-goal":
+		h.createGoal(w, r)
 	case r.Method == http.MethodGet && r.URL.Path == "/admin/get-work-status":
 		h.getWorkingStatusForToday(w, r)
 	case r.Method == http.MethodPost && r.URL.Path == "/admin/start-work-session":
@@ -99,6 +101,37 @@ func (h *Handler) renderAdminPage(w http.ResponseWriter) {
 		log.Printf("template exec error: %v", err)
 	}
 
+}
+
+func (h *Handler) createGoal(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "incorrect form values", http.StatusBadRequest)
+		return
+	}
+
+	name := r.FormValue("goal_name")
+	desc := r.FormValue("goal_description")
+	dueStr := r.FormValue("goal_due")
+
+	if name == "" || dueStr == "" {
+		http.Error(w, "missing goal name or due date", http.StatusBadRequest)
+		return
+	}
+
+	due, err := time.Parse("2006-01-02", dueStr)
+	if err != nil {
+		http.Error(w, "invalid due date", http.StatusBadRequest)
+		return
+	}
+
+	goal := app.Goal{Name: name, Description: desc, DueAt: &due}
+	if err := h.AppService.CreateGoal(goal); err != nil {
+		log.Printf("createGoal CreateGoal error: %v", err)
+		http.Error(w, "failed to create goal", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/admin/", http.StatusSeeOther)
 }
 
 func (h *Handler) addTask(w http.ResponseWriter, r *http.Request) {
