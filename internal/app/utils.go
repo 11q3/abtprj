@@ -39,3 +39,29 @@ func ConvertRepoSessions(repoSessions []repository.WorkSession) []WorkSession {
 	}
 	return out
 }
+
+func ConvertRepoGoals(repoGoals []repository.Goal) []Goal {
+	out := make([]Goal, len(repoGoals))
+	for i, goal := range repoGoals {
+		out[i] = Goal{
+			ID:          goal.Id,
+			Name:        goal.Name,
+			Description: goal.Description,
+			Status:      goal.Status,
+			DoneAt:      &goal.DoneAt,
+			DueAt:       &goal.DueAt,
+		}
+	}
+	return out
+}
+
+/*
+type Goal struct {
+	Id          int
+	Name        string
+	Description string
+	Status      string
+	DoneAt      sql.NullTime
+	CreatedAt   time.Time
+}
+*/

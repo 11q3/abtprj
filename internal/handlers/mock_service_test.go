@@ -12,11 +12,16 @@ type mockService struct {
 	sessionsForDate []app.WorkSession
 	tasksForDate    []app.Task
 	todos           []app.Task
+	goals           []app.Goal
 }
 
 func (m *mockService) LoginAdmin(login, password string) error { return nil }
 func (m *mockService) AddTask(name, description string) error  { return nil }
 func (m *mockService) CompleteTask(name string) error          { return nil }
+
+func (m *mockService) GetGoals() ([]app.Goal, error) {
+	return m.goals, nil
+}
 
 func (m *mockService) IsWorking() (bool, error) {
 	return m.isWorking, nil

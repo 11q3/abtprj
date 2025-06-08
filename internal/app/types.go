@@ -1,6 +1,9 @@
 package app
 
-import "time"
+import (
+	"database/sql"
+	"time"
+)
 
 type Task struct {
 	Name        string
@@ -13,4 +16,13 @@ type WorkSession struct {
 	ID        int
 	StartTime time.Time
 	EndTime   *time.Time
+}
+
+type Goal struct {
+	ID          int
+	Name        string
+	Description string
+	Status      string
+	DoneAt      *sql.NullTime
+	DueAt       *sql.NullTime
 }

@@ -32,3 +32,13 @@ type Admin struct {
 	PasswordHash string
 	CreatedAt    time.Time
 }
+
+type Goal struct {
+	Id          int
+	Name        string
+	Description string
+	Status      string
+	DoneAt      sql.NullTime
+	DueAt       sql.NullTime
+	CreatedAt   time.Time
+}

@@ -239,3 +239,52 @@ func GenerateAdmin(db *sql.DB, login string, hash []byte) error {
 	}
 	return nil
 }
+
+func GetGoals(db *sql.DB) ([]Goal, error) {
+	rows, err := db.Query("SELECT id, name, description, status, done_at, created_at, due_at FROM goals")
+	if err != nil {
+		log.Printf("Error getting goals: %v", err)
+		return nil, err
+	}
+
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			log.Printf("Error closing rows: %v", err)
+		}
+	}(rows)
+
+	var goals []Goal
+	for rows.Next() {
+		var goal Goal
+		if err := rows.Scan(&goal.Id, &goal.Name, &goal.Description, &goal.Status, &goal.DoneAt, &goal.DueAt); err != nil {
+			log.Printf("Error scanning goal: %v", err)
+		}
+
+		goals = append(goals, goal)
+	}
+
+	return goals, rows.Err()
+
+	/*rows, err := db.Query(
+		`SELECT start_time, end_time
+		   FROM work_sessions
+		  WHERE start_time >= $1
+		    AND (end_time < $2 OR end_time IS NULL)`,
+		start, end,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var workSessions []WorkSession
+	for rows.Next() {
+		var ws WorkSession
+		if err := rows.Scan(&ws.StartTime, &ws.EndTime); err != nil {
+			continue
+		}
+		workSessions = append(workSessions, ws)
+	}
+	return workSessions, rows.Err()*/
+}

@@ -17,6 +17,7 @@ type AppService interface {
 	GetWorkSessionsForDate(date string) ([]WorkSession, error)
 	StartWorkSession() error
 	EndWorkSession() error
+	GetGoals() ([]Goal, error)
 
 	IsWorking() (bool, error)
 
@@ -46,6 +47,7 @@ type DayTasksStat struct {
 	Level int    // shade level 0–4
 	Row   int    // grid‐row (2–8): 2=Sunday, 3=Monday … 8=Saturday
 	Col   int    // grid‐column (2–54): week index + 2
+	Goals []Goal
 }
 
 type DaySessionsStat struct {
@@ -152,6 +154,26 @@ func (s *DefaultAppService) GetDayTaskStats(year int) ([]DayTasksStat, error) {
 		}
 		stats[idx].Level = lvl
 	}
+
+	empty = generateEmptyDayStats()
+	copy(stats, stats)
+	repoGoals, err := repository.GetGoals(s.DB)
+	goals := ConvertRepoGoals(repoGoals)
+	if err != nil {
+		return nil, err
+	}
+	for _, goal := range goals {
+		d := goal.DueAt
+		_, isoWeek := d.Time.ISOWeek()
+		weekIdx := isoWeek - 1
+		dowIdx := (int(d.Time.Weekday()) + 6) % 7
+		idx := weekIdx*7 + dowIdx
+		if idx < 0 || idx >= len(stats) {
+			continue
+		}
+		stats[idx].Date = d.Time.Format("2006-01-02")
+		stats[idx].Goals = append(stats[idx].Goals, goal)
+	}
 	return stats, nil
 }
 
@@ -249,11 +271,20 @@ func (s *DefaultAppService) CheckIfAdminExists() (bool, error) {
 	return exists, nil
 }
 
+func (s *DefaultAppService) GetGoals() ([]Goal, error) {
+	goals, err := repository.GetGoals(s.DB)
+	if err != nil {
+		log.Printf("GetGoal exec error: %v", err)
+		return nil, err
+	}
+	return ConvertRepoGoals(goals), err
+}
+
 func generateEmptyDayStats() []DayTasksStat {
 	days := make([]DayTasksStat, 0, 52*7)
 	for week := 1; week <= 52; week++ {
 		for dow := 0; dow < 7; dow++ {
-			days = append(days, DayTasksStat{"", 0, 0, dow + 2, week + 1})
+			days = append(days, DayTasksStat{"", 0, 0, dow + 2, week + 1, nil})
 		}
 	}
 	return days
