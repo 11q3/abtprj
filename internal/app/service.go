@@ -18,6 +18,8 @@ type AppService interface {
 	StartWorkSession() error
 	EndWorkSession() error
 	GetGoals() ([]Goal, error)
+	GetTodoGoals() ([]Goal, error)
+	CompleteGoal(id int) error
 	CreateGoal(goal Goal) error
 
 	IsWorking() (bool, error)
@@ -282,6 +284,24 @@ func (s *DefaultAppService) GetGoals() ([]Goal, error) {
 		return nil, err
 	}
 	return ConvertRepoGoals(goals), err
+}
+
+func (s *DefaultAppService) GetTodoGoals() ([]Goal, error) {
+	todoGoals, err := repository.GetTodoGoals(s.DB)
+	if err != nil {
+		log.Printf("GetTodoGoal exec error: %v", err)
+		return nil, err
+	}
+	return ConvertRepoGoals(todoGoals), err
+}
+
+func (s *DefaultAppService) CompleteGoal(id int) error {
+	err := repository.CompleteGoal(s.DB, id)
+	if err != nil {
+		log.Printf("CompleteGoal exec error: %v", err)
+		return err
+	}
+	return nil
 }
 
 func (s *DefaultAppService) CreateGoal(goal Goal) error {

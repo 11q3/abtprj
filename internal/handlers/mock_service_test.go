@@ -11,20 +11,26 @@ type mockService struct {
 	isWorking       bool
 	sessionsForDate []app.WorkSession
 	tasksForDate    []app.Task
-	todos           []app.Task
+	todoTasks       []app.Task
 	goals           []app.Goal
+	todoGoals       []app.Goal
 }
 
 func (m *mockService) LoginAdmin(login, password string) error { return nil }
 func (m *mockService) AddTask(name, description string) error  { return nil }
 func (m *mockService) CompleteTask(name string) error          { return nil }
 func (m *mockService) CreateGoal(goal app.Goal) error          { return nil }
+func (m *mockService) CompleteGoal(id int) error               { return nil }
 func (m *mockService) StartWorkSession() error                 { return nil }
 func (m *mockService) EndWorkSession() error                   { return nil }
 func (m *mockService) CheckIfAdminExists() (bool, error)       { return false, nil }
 
 func (m *mockService) GetGoals() ([]app.Goal, error) {
 	return m.goals, nil
+}
+
+func (m *mockService) GetTodoGoals() ([]app.Goal, error) {
+	return m.todoGoals, nil
 }
 
 func (m *mockService) IsWorking() (bool, error) {
@@ -40,7 +46,7 @@ func (m *mockService) GetWorkSessionsForDate(date string) ([]app.WorkSession, er
 }
 
 func (m *mockService) GetTodoTasks() ([]app.Task, error) {
-	return m.todos, nil
+	return m.todoTasks, nil
 }
 
 func (m *mockService) GetDayTaskStats(year int) ([]app.DayTasksStat, error) {

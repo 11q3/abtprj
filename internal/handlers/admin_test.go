@@ -48,7 +48,7 @@ func TestAdminHandler_OK(t *testing.T) {
 	}
 
 	svc := &mockService{
-		todos: mockTodos,
+		todoTasks: mockTodos,
 	}
 
 	h := &Handler{
@@ -94,7 +94,7 @@ func TestAdminHandler_IsWorkingIndicator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			svc := &mockService{
 				isWorking: tc.isWorking,
-				todos:     []app.Task{},
+				todoTasks: []app.Task{},
 			}
 
 			h := &Handler{

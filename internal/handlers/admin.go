@@ -26,6 +26,8 @@ func (h *Handler) AdminHandler(w http.ResponseWriter, r *http.Request) {
 		h.completeTask(w, r)
 	case r.Method == http.MethodPost && r.URL.Path == "/admin/create-goal":
 		h.createGoal(w, r)
+	case r.Method == http.MethodGet && r.URL.Path == "/admin/complete-goal":
+		h.completeGoal(w, r)
 	case r.Method == http.MethodGet && r.URL.Path == "/admin/get-work-status":
 		h.getWorkingStatusForToday(w, r)
 	case r.Method == http.MethodPost && r.URL.Path == "/admin/start-work-session":
@@ -162,6 +164,24 @@ func (h *Handler) completeTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.AppService.CompleteTask(name); err != nil {
+		log.Printf("completeTask CompleteTask error: %v", err)
+		http.Error(w, "failed to complete a task", http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/admin/", http.StatusSeeOther)
+}
+
+func (h *Handler) completeGoal(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "incorrect form values", http.StatusBadRequest)
+		return
+	}
+	id := r.FormValue("id")
+	if id == "" {
+		http.Error(w, "goal id is not present", http.StatusBadRequest)
+		return
+	}
+	if err := h.AppService.CompleteTask(id); err != nil {
 		log.Printf("completeTask CompleteTask error: %v", err)
 		http.Error(w, "failed to complete a task", http.StatusInternalServerError)
 		return

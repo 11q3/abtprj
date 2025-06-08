@@ -267,6 +267,49 @@ func GetGoals(db *sql.DB) ([]Goal, error) {
 	return goals, rows.Err()
 }
 
+func GetTodoGoals(db *sql.DB) ([]Goal, error) {
+	rows, err := db.Query("SELECT id, name, description, status FROM goals WHERE status = 'todo'")
+	if err != nil {
+		log.Printf("Error getting todo goals: %v", err)
+		return nil, err
+	}
+
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			log.Printf("Error closing rows: %v", err)
+		}
+	}(rows)
+
+	var todoGoals []Goal
+	for rows.Next() {
+		var goal Goal
+		if err := rows.Scan(&goal.Id, &goal.Name, &goal.Description, &goal.Status, &goal.DoneAt, &goal.DueAt); err != nil {
+			log.Printf("Error scanning goal: %v", err)
+		}
+
+		todoGoals = append(todoGoals, goal)
+	}
+
+	return todoGoals, rows.Err()
+}
+
+func CompleteGoal(db *sql.DB, id int) error {
+	isActive, session, err := CheckIfActiveSessions(db)
+	if !isActive || session == nil {
+		log.Printf("attempting to end a goal without active session: %v", err)
+		return err
+	}
+
+	result, err := db.Exec(
+		"UPDATE goals SET status = 'done', done_at = NOW() WHERE id = $1",
+		id,
+	)
+
+	log.Printf("sql.Result: %#v", result)
+	return err
+}
+
 func CreateGoal(db *sql.DB, name string, description string, dueAt time.Time) error {
 	_, err := db.Exec("INSERT INTO goals (name, description, due_at) VALUES ($1, $2, $3)", name, description, dueAt)
 	if err != nil {
